@@ -1,0 +1,107 @@
+{
+  "app": {
+    "name": "حفصہ",
+    "tagline": "اسلامی نکاح نیٹ ورک",
+    "description": "پہلا اسلامی نکاح پلیٹ فارم جو ولی کو تعارف کے عمل کا مرکز بناتا ہے"
+  },
+  "nav": {
+    "home": "ہوم",
+    "about": "تعارف",
+    "browse": "براؤز",
+    "messages": "پیغامات",
+    "requests": "درخواستیں",
+    "settings": "ترتیبات",
+    "admin": "ڈیش بورڈ",
+    "login": "لاگ ان",
+    "register": "رجسٹر",
+    "logout": "لاگ آؤٹ"
+  },
+  "auth": {
+    "phone": "فون نمبر",
+    "email": "ای میل",
+    "password": "پاس ورڈ",
+    "loginTitle": "حفصہ میں لاگ ان",
+    "registerTitle": "نیا اکاؤنٹ بنائیں",
+    "role_groom": "شادی کے خواہشمند",
+    "role_guardian": "ولی",
+    "role_both": "دونوں",
+    "verifyOtp": "OTP تصدیق",
+    "sendOtp": "تصدیقی کوڈ بھیجیں"
+  },
+  "profile": {
+    "my": "میری پروفائل",
+    "displayName": "نام یا عرفیت",
+    "age": "عمر",
+    "nationality": "قومیت",
+    "country": "رہائشی ملک",
+    "city": "شہر",
+    "education": "تعلیم",
+    "occupation": "پیشہ",
+    "marriageNumber": {
+      "FIRST": "پہلی شادی",
+      "SECOND": "دوسری شادی",
+      "THIRD": "تیسری شادی",
+      "FOURTH": "چوتھی شادی"
+    },
+    "madhab": {
+      "HANAFI": "حنفی",
+      "MALIKI": "مالکی",
+      "SHAFII": "شافعی",
+      "HANBALI": "حنبلی",
+      "OTHER": "دیگر"
+    },
+    "prayer": {
+      "ALWAYS": "ہمیشہ نماز پڑھتا ہے",
+      "MOSTLY": "اکثر نماز پڑھتا ہے",
+      "SOMETIMES": "کبھی کبھی",
+      "WORKING_ON_IT": "پابندی کی کوشش"
+    },
+    "quran": {
+      "FULL": "کامل حفظ",
+      "THREE_QUARTERS": "تین چوتھائی حفظ",
+      "HALF": "آدھا حفظ",
+      "QUARTER": "ایک چوتھائی حفظ",
+      "SOME_SURAHS": "متفرق سورتیں",
+      "FATIHA_ONLY": "صرف فاتحہ",
+      "NONE": "نہیں"
+    },
+    "submit": "جائزہ کے لیے جمع کروائیں"
+  },
+  "browse": {
+    "title": "پروفائلز براؤز کریں",
+    "filters": "فلٹر",
+    "sendRequest": "درخواست بھیجیں",
+    "aiSuggestions": "AI تجاویز",
+    "noResults": "کوئی نتیجہ نہیں ملا"
+  },
+  "requests": {
+    "sent": "بھیجی گئی درخواستیں",
+    "received": "وصول شدہ درخواستیں",
+    "accept": "قبول کریں",
+    "reject": "مسترد کریں",
+    "pending": "زیر التوا",
+    "noRequests": "کوئی درخواست نہیں"
+  },
+  "messages": {
+    "title": "پیغامات",
+    "noConversations": "کوئی گفتگو نہیں",
+    "typeMessage": "اپنا پیغام لکھیں...",
+    "send": "بھیجیں"
+  },
+  "settings": {
+    "title": "ترتیبات",
+    "language": "زبان",
+    "subscription": "سبسکرپشن"
+  },
+  "common": {
+    "loading": "لوڈ ہو رہا ہے...",
+    "error": "ایک خرابی پیش آگئی",
+    "save": "محفوظ کریں",
+    "cancel": "منسوخ کریں",
+    "delete": "حذف کریں",
+    "confirm": "تصدیق کریں",
+    "back": "واپس",
+    "next": "اگلا",
+    "previous": "پچھلا"
+  }
+}

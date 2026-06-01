@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #1B4332;
+  --color-primary-light: #2D6A4F;
+  --color-primary-pale: #D8F3DC;
+  --color-gold: #B8860B;
+  --color-gold-light: #FFD700;
+  --color-bg: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-text: #1A1A1A;
+  --color-muted: #6B7280;
+  --color-border: #E5E7EB;
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[dir="ltr"] body {
+  font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+}

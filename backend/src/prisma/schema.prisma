@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  GROOM
+  GUARDIAN
+  BOTH
+  ADMIN
+}
+
+enum ProfileStatus {
+  DRAFT
+  PENDING_AI_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum MarriageNumber {
+  FIRST
+  SECOND
+  THIRD
+  FOURTH
+}
+
+enum MadhabType {
+  HANAFI
+  MALIKI
+  SHAFII
+  HANBALI
+  OTHER
+}
+
+enum PrayerCommitment {
+  ALWAYS
+  MOSTLY
+  SOMETIMES
+  WORKING_ON_IT
+}
+
+enum QuranMemorization {
+  FULL
+  THREE_QUARTERS
+  HALF
+  QUARTER
+  SOME_SURAHS
+  FATIHA_ONLY
+  NONE
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED_SEEKING_SECOND
+  MARRIED_SEEKING_THIRD
+  MARRIED_SEEKING_FOURTH
+  DIVORCED
+  WIDOWED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+}
+
+model User {
+  id                String           @id @default(cuid())
+  firebaseUid       String           @unique
+  phone             String?          @unique
+  email             String?          @unique
+  role              UserRole         @default(GROOM)
+  subscriptionPlan  SubscriptionPlan @default(FREE)
+  subscriptionExpiry DateTime?
+  isVerified        Boolean          @default(false)
+  isActive          Boolean          @default(true)
+  isBanned          Boolean          @default(false)
+  language          String           @default("ar")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  profile           Profile?
+  sentRequests      ContactRequest[] @relation("SentRequests")
+  receivedRequests  ContactRequest[] @relation("ReceivedRequests")
+  sentMessages      Message[]        @relation("SentMessages")
+  conversations     ConversationParticipant[]
+  notifications     Notification[]
+  reports           Report[]         @relation("Reporter")
+  reportedIn        Report[]         @relation("Reported")
+}
+
+model Profile {
+  id                    String              @id @default(cuid())
+  userId                String              @unique
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  displayName           String
+  age                   Int
+  nationality           String
+  countryOfResidence    String
+  city                  String
+  education             String
+  occupation            String
+  maritalStatus         MaritalStatus
+  marriageNumber        MarriageNumber
+  hasChildren           Boolean             @default(false)
+  numberOfChildren      Int?
+
+  madhab                MadhabType
+  prayerCommitment      PrayerCommitment
+  quranMemorization     QuranMemorization
+  religiousDescription  String?             @db.Text
+
+  selfIntroduction      String              @db.Text
+  additionalNotes       String?             @db.Text
+
+  wifeAgeMin            Int
+  wifeAgeMax            Int
+  wifeNationality       String?
+  wifeCountry           String?
+  wifeEducation         String?
+  wifeMaritalStatus     String
+  wifeHasChildren       String
+  wifeReligiousLevel    String
+  wifeAdditionalNotes   String?             @db.Text
+
+  photos                ProfilePhoto[]
+
+  status                ProfileStatus       @default(DRAFT)
+  aiReviewScore         Float?
+  aiReviewNotes         String?             @db.Text
+  aiReviewedAt          DateTime?
+  publishedAt           DateTime?
+  viewCount             Int                 @default(0)
+  requestCount          Int                 @default(0)
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  contactRequests       ContactRequest[]
+}
+
+model ProfilePhoto {
+  id            String   @id @default(cuid())
+  profileId     String
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  url           String
+  cloudinaryId  String
+  isPrimary     Boolean  @default(false)
+  order         Int      @default(0)
+  isApproved    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model ContactRequest {
+  id           String   @id @default(cuid())
+  senderId     String
+  sender       User     @relation("SentRequests", fields: [senderId], references: [id])
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id])
+  receiverId   String
+  receiver     User     @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  status       String   @default("PENDING")
+  message      String?  @db.Text
+  conversation Conversation?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([senderId, profileId])
+}
+
+model Conversation {
+  id             String   @id @default(cuid())
+  requestId      String   @unique
+  request        ContactRequest @relation(fields: [requestId], references: [id])
+  messages       Message[]
+  participants   ConversationParticipant[]
+  lastMessageAt  DateTime?
+  createdAt      DateTime @default(now())
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  content        String       @db.Text
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  titleAr   String
+  titleEn   String
+  bodyAr    String
+  bodyEn    String
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  reporter    User     @relation("Reporter", fields: [reporterId], references: [id])
+  reportedId  String
+  reported    User     @relation("Reported", fields: [reportedId], references: [id])
+  reason      String
+  details     String?  @db.Text
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  targetId  String?
+  details   Json?
+  createdAt DateTime @default(now())
+}

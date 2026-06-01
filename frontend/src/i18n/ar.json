@@ -1,0 +1,142 @@
+{
+  "app": {
+    "name": "حفصة",
+    "tagline": "شبكة إسلامية للتعارف بقصد الزواج",
+    "description": "منصة الزواج الإسلامية الأولى التي تضع ولي الأمر في صلب عملية التعارف"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "about": "عن حفصة",
+    "browse": "تصفح",
+    "messages": "الرسائل",
+    "requests": "الطلبات",
+    "settings": "الإعدادات",
+    "admin": "لوحة التحكم",
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج"
+  },
+  "auth": {
+    "phone": "رقم الهاتف",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "loginTitle": "تسجيل الدخول إلى حفصة",
+    "registerTitle": "إنشاء حساب جديد",
+    "role_groom": "راغب في الزواج",
+    "role_guardian": "ولي أمر",
+    "role_both": "كلاهما",
+    "verifyOtp": "تأكيد رمز التحقق",
+    "sendOtp": "إرسال رمز التحقق"
+  },
+  "profile": {
+    "create": "إنشاء ملف شخصي",
+    "edit": "تعديل الملف الشخصي",
+    "my": "ملفي الشخصي",
+    "displayName": "الاسم أو الكنية",
+    "age": "العمر",
+    "nationality": "الجنسية",
+    "country": "بلد الإقامة",
+    "city": "المدينة",
+    "education": "المستوى التعليمي",
+    "occupation": "المهنة",
+    "maritalStatus": {
+      "SINGLE": "أعزب",
+      "MARRIED_SEEKING_SECOND": "متزوج ويريد ثانية",
+      "MARRIED_SEEKING_THIRD": "متزوج ويريد ثالثة",
+      "MARRIED_SEEKING_FOURTH": "متزوج ويريد رابعة",
+      "DIVORCED": "مطلق",
+      "WIDOWED": "أرمل"
+    },
+    "marriageNumber": {
+      "FIRST": "زواج أول",
+      "SECOND": "زواج ثانٍ",
+      "THIRD": "زواج ثالث",
+      "FOURTH": "زواج رابع"
+    },
+    "hasChildren": "هل لديه أطفال؟",
+    "numberOfChildren": "عدد الأطفال",
+    "madhab": {
+      "HANAFI": "حنفي",
+      "MALIKI": "مالكي",
+      "SHAFII": "شافعي",
+      "HANBALI": "حنبلي",
+      "OTHER": "أخرى"
+    },
+    "prayer": {
+      "ALWAYS": "ملتزم بالصلاة دائماً",
+      "MOSTLY": "ملتزم في أغلب الأحيان",
+      "SOMETIMES": "أحياناً",
+      "WORKING_ON_IT": "أسعى للالتزام"
+    },
+    "quran": {
+      "FULL": "حافظ للقرآن كاملاً",
+      "THREE_QUARTERS": "حفظ ثلاثة أرباع القرآن",
+      "HALF": "حفظ نصف القرآن",
+      "QUARTER": "حفظ ربع القرآن",
+      "SOME_SURAHS": "حفظ سور متفرقة",
+      "FATIHA_ONLY": "الفاتحة والمعوذات",
+      "NONE": "لا يحفظ"
+    },
+    "selfIntroduction": "التعريف الذاتي",
+    "wifeRequirements": "شروط الزوجة",
+    "wifeAgeRange": "الفئة العمرية للزوجة",
+    "wifeNationality": "الجنسية",
+    "wifeEducation": "المستوى التعليمي",
+    "wifeMaritalStatus": "الحالة الاجتماعية",
+    "wifeReligiousLevel": "المستوى الديني",
+    "submit": "تقديم للمراجعة",
+    "status": {
+      "DRAFT": "مسودة",
+      "PENDING_AI_REVIEW": "قيد المراجعة",
+      "APPROVED": "تم النشر",
+      "REJECTED": "مرفوض",
+      "SUSPENDED": "موقوف"
+    }
+  },
+  "browse": {
+    "title": "تصفح الملفات الشخصية",
+    "filters": "تصفية",
+    "search": "بحث...",
+    "sendRequest": "إرسال طلب تواصل",
+    "aiSuggestions": "اقتراحات الذكاء الاصطناعي",
+    "noResults": "لا توجد نتائج",
+    "premiumFeature": "هذه الميزة متاحة للمشتركين المميزين"
+  },
+  "requests": {
+    "sent": "الطلبات المرسلة",
+    "received": "الطلبات المستلمة",
+    "accept": "قبول",
+    "reject": "رفض",
+    "pending": "قيد الانتظار",
+    "accepted": "مقبول",
+    "rejected": "مرفوض",
+    "noRequests": "لا توجد طلبات",
+    "limitReached": "وصلت للحد المجاني (3 طلبات/شهر)"
+  },
+  "messages": {
+    "title": "الرسائل",
+    "noConversations": "لا توجد محادثات",
+    "typeMessage": "اكتب رسالتك...",
+    "send": "إرسال"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "subscription": "الاشتراك",
+    "currentPlan": "خطتك الحالية",
+    "upgrade": "ترقية الاشتراك",
+    "free": "مجاني",
+    "premium": "مميز"
+  },
+  "common": {
+    "loading": "جار التحميل...",
+    "error": "حدث خطأ",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق"
+  }
+}

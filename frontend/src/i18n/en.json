@@ -1,0 +1,142 @@
+{
+  "app": {
+    "name": "Hafsa",
+    "tagline": "Islamic Marriage Network",
+    "description": "The first Islamic marriage platform that places the guardian at the heart of the matching process"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About Hafsa",
+    "browse": "Browse",
+    "messages": "Messages",
+    "requests": "Requests",
+    "settings": "Settings",
+    "admin": "Dashboard",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "auth": {
+    "phone": "Phone Number",
+    "email": "Email",
+    "password": "Password",
+    "loginTitle": "Login to Hafsa",
+    "registerTitle": "Create New Account",
+    "role_groom": "Seeking Marriage",
+    "role_guardian": "Guardian",
+    "role_both": "Both",
+    "verifyOtp": "Verify OTP",
+    "sendOtp": "Send Verification Code"
+  },
+  "profile": {
+    "create": "Create Profile",
+    "edit": "Edit Profile",
+    "my": "My Profile",
+    "displayName": "Display Name",
+    "age": "Age",
+    "nationality": "Nationality",
+    "country": "Country of Residence",
+    "city": "City",
+    "education": "Education",
+    "occupation": "Occupation",
+    "maritalStatus": {
+      "SINGLE": "Single",
+      "MARRIED_SEEKING_SECOND": "Married seeking second",
+      "MARRIED_SEEKING_THIRD": "Married seeking third",
+      "MARRIED_SEEKING_FOURTH": "Married seeking fourth",
+      "DIVORCED": "Divorced",
+      "WIDOWED": "Widowed"
+    },
+    "marriageNumber": {
+      "FIRST": "First Marriage",
+      "SECOND": "Second Marriage",
+      "THIRD": "Third Marriage",
+      "FOURTH": "Fourth Marriage"
+    },
+    "hasChildren": "Has children?",
+    "numberOfChildren": "Number of children",
+    "madhab": {
+      "HANAFI": "Hanafi",
+      "MALIKI": "Maliki",
+      "SHAFII": "Shafi'i",
+      "HANBALI": "Hanbali",
+      "OTHER": "Other"
+    },
+    "prayer": {
+      "ALWAYS": "Always prays",
+      "MOSTLY": "Prays most of the time",
+      "SOMETIMES": "Sometimes",
+      "WORKING_ON_IT": "Working on it"
+    },
+    "quran": {
+      "FULL": "Full Quran memorization",
+      "THREE_QUARTERS": "Three quarters memorized",
+      "HALF": "Half memorized",
+      "QUARTER": "Quarter memorized",
+      "SOME_SURAHS": "Some surahs",
+      "FATIHA_ONLY": "Fatiha only",
+      "NONE": "None"
+    },
+    "selfIntroduction": "Self Introduction",
+    "wifeRequirements": "Wife Requirements",
+    "wifeAgeRange": "Wife age range",
+    "wifeNationality": "Nationality",
+    "wifeEducation": "Education",
+    "wifeMaritalStatus": "Marital status",
+    "wifeReligiousLevel": "Religious level",
+    "submit": "Submit for Review",
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING_AI_REVIEW": "Under Review",
+      "APPROVED": "Published",
+      "REJECTED": "Rejected",
+      "SUSPENDED": "Suspended"
+    }
+  },
+  "browse": {
+    "title": "Browse Profiles",
+    "filters": "Filters",
+    "search": "Search...",
+    "sendRequest": "Send Request",
+    "aiSuggestions": "AI Suggestions",
+    "noResults": "No results found",
+    "premiumFeature": "This feature is available for premium subscribers"
+  },
+  "requests": {
+    "sent": "Sent Requests",
+    "received": "Received Requests",
+    "accept": "Accept",
+    "reject": "Reject",
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "noRequests": "No requests",
+    "limitReached": "Free limit reached (3 requests/month)"
+  },
+  "messages": {
+    "title": "Messages",
+    "noConversations": "No conversations",
+    "typeMessage": "Type your message...",
+    "send": "Send"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "subscription": "Subscription",
+    "currentPlan": "Current Plan",
+    "upgrade": "Upgrade",
+    "free": "Free",
+    "premium": "Premium"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  }
+}

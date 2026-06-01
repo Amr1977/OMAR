@@ -1,0 +1,101 @@
+{
+  "app": {
+    "name": "Hafsa",
+    "tagline": "Réseau de Mariage Islamique",
+    "description": "La première plateforme de mariage islamique qui place le tuteur au cœur du processus de mise en relation"
+  },
+  "nav": {
+    "home": "Accueil",
+    "about": "À propos",
+    "browse": "Parcourir",
+    "messages": "Messages",
+    "requests": "Demandes",
+    "settings": "Paramètres",
+    "admin": "Tableau de bord",
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "logout": "Déconnexion"
+  },
+  "auth": {
+    "phone": "Numéro de téléphone",
+    "email": "Email",
+    "password": "Mot de passe",
+    "loginTitle": "Connexion à Hafsa",
+    "registerTitle": "Créer un compte",
+    "role_groom": "Cherche à se marier",
+    "role_guardian": "Tuteur",
+    "role_both": "Les deux",
+    "verifyOtp": "Vérifier OTP",
+    "sendOtp": "Envoyer le code"
+  },
+  "profile": {
+    "my": "Mon profil",
+    "displayName": "Nom",
+    "age": "Âge",
+    "nationality": "Nationalité",
+    "country": "Pays de résidence",
+    "city": "Ville",
+    "education": "Éducation",
+    "occupation": "Profession",
+    "madhab": {
+      "HANAFI": "Hanafi",
+      "MALIKI": "Maliki",
+      "SHAFII": "Chafi'i",
+      "HANBALI": "Hanbali",
+      "OTHER": "Autre"
+    },
+    "prayer": {
+      "ALWAYS": "Prie toujours",
+      "MOSTLY": "Prie souvent",
+      "SOMETIMES": "Parfois",
+      "WORKING_ON_IT": "En progrès"
+    },
+    "quran": {
+      "FULL": "Mémorisation complète",
+      "THREE_QUARTERS": "Trois quarts",
+      "HALF": "Moitié",
+      "QUARTER": "Quart",
+      "SOME_SURAHS": "Quelques sourates",
+      "FATIHA_ONLY": "Fatiha seulement",
+      "NONE": "Aucune"
+    },
+    "submit": "Soumettre"
+  },
+  "browse": {
+    "title": "Parcourir les profils",
+    "filters": "Filtres",
+    "sendRequest": "Envoyer une demande",
+    "aiSuggestions": "Suggestions IA",
+    "noResults": "Aucun résultat"
+  },
+  "requests": {
+    "sent": "Demandes envoyées",
+    "received": "Demandes reçues",
+    "accept": "Accepter",
+    "reject": "Refuser",
+    "pending": "En attente",
+    "noRequests": "Aucune demande"
+  },
+  "messages": {
+    "title": "Messages",
+    "noConversations": "Aucune conversation",
+    "typeMessage": "Écrivez votre message...",
+    "send": "Envoyer"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "subscription": "Abonnement"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent"
+  }
+}
