@@ -17,7 +17,7 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { firebaseUid, phone, email, role, language } = req.body;
 
-    const existingUser = await prisma.user.findFirst({
+    let user = await prisma.user.findFirst({
       where: {
         OR: [
           { firebaseUid },
@@ -27,27 +27,28 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    if (existingUser) {
-      return res.status(409).json({
-        error: 'USER_EXISTS',
-        messageAr: 'المستخدم موجود بالفعل',
-        messageEn: 'User already exists',
+    const isNew = !user;
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          firebaseUid,
+          phone,
+          email,
+          role: role || 'GROOM',
+          language: language || 'ar',
+        },
+      });
+    } else if (user.firebaseUid !== firebaseUid) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { firebaseUid },
       });
     }
 
-    const user = await prisma.user.create({
-      data: {
-        firebaseUid,
-        phone,
-        email,
-        role: role || 'GROOM',
-        language: language || 'ar',
-      },
-    });
-
     const tokens = generateTokens(user.id);
 
-    return res.status(201).json({
+    return res.status(isNew ? 201 : 200).json({
       user: {
         id: user.id,
         firebaseUid: user.firebaseUid,
