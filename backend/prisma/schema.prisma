@@ -125,20 +125,48 @@ model Profile {
 
   displayName           String
   age                   Int
+  dateOfBirth           DateTime?
+  weight                Int?
+  height                Int?
+  skinColor             String?
+  beard                 String?
+  sports                String?
+  healthIssues          String?
   nationality           String
   countryOfResidence    String
   city                  String
   education             String
+  educationLevel        String?
   occupation            String
+  workType              String?
+  incomeLevel           String?
   maritalStatus         MaritalStatus
   marriageNumber        MarriageNumber
+  lastDivorceDate       String?
   hasChildren           Boolean             @default(false)
   numberOfChildren      Int?
+  childrenDetails       String?             @db.Text
+  childrenCustody       String?
+  wantsPolygamy         Boolean?
+  wantsChildren         Boolean?
+
+  fatherOccupation      String?
+  motherOccupation      String?
+  siblingsCount         Int?
+  siblingsEducation     String?
+
+  originGovernorate     String?
+  residenceGovernorate  String?
+  areaType              String?
+  marriedResidence      String?
+  housingType           String?
+  housingPrivacy        String?
 
   madhab                MadhabType
   prayerCommitment      PrayerCommitment
   quranMemorization     QuranMemorization
   religiousDescription  String?             @db.Text
+  smoking               String?
 
   selfIntroduction      String              @db.Text
   additionalNotes       String?             @db.Text
@@ -151,6 +179,13 @@ model Profile {
   wifeMaritalStatus     String
   wifeHasChildren       String
   wifeReligiousLevel    String
+  wifePreferredSkinColor String?
+  wifePreferredHijab    String?
+  wifePreferredWork     String?
+  wifeAcceptDivorcedWithChildren String?
+  wifeAcceptDivorcedChildrenCustody String?
+  wifeAcceptOtherCity   Boolean?
+  wifeFurnishApartment  String?
   wifeAdditionalNotes   String?             @db.Text
 
   photos                ProfilePhoto[]
