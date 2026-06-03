@@ -9,6 +9,7 @@ import {
   deleteProfile,
   uploadPhoto,
   deletePhoto,
+  setPrimaryPhoto,
   submitForReview,
   getMyProfile,
   toggleVisibility,
@@ -24,6 +25,7 @@ router.get('/:id', getProfile);
 router.put('/:id', updateProfile);
 router.delete('/:id', deleteProfile);
 router.post('/:id/photos', upload.single('photo'), uploadPhoto);
+router.put('/:id/photos/:photoId/primary', setPrimaryPhoto);
 router.delete('/:id/photos/:photoId', deletePhoto);
 router.put('/:id/visibility', toggleVisibility);
 router.post('/:id/submit', submitForReview);

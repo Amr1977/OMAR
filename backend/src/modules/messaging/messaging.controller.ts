@@ -15,7 +15,17 @@ export const listConversations = async (req: AuthRequest, res: Response) => {
         participants: {
           include: {
             user: {
-              select: { id: true, role: true, isVerified: true },
+              select: {
+                id: true,
+                role: true,
+                isVerified: true,
+                profile: {
+                  select: {
+                    displayName: true,
+                    photos: { where: { isPrimary: true }, take: 1, orderBy: { order: 'asc' } },
+                  },
+                },
+              },
             },
           },
         },
@@ -47,7 +57,19 @@ export const getConversation = async (req: AuthRequest, res: Response) => {
       include: {
         participants: {
           include: {
-            user: { select: { id: true, role: true, isVerified: true } },
+            user: {
+              select: {
+                id: true,
+                role: true,
+                isVerified: true,
+                profile: {
+                  select: {
+                    displayName: true,
+                    photos: { where: { isPrimary: true }, take: 1, orderBy: { order: 'asc' } },
+                  },
+                },
+              },
+            },
           },
         },
         messages: {

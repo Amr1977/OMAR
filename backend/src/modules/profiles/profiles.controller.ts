@@ -182,6 +182,7 @@ export const uploadPhoto = async (req: AuthRequest, res: Response) => {
         cloudinaryId,
         isPrimary: photoCount === 0,
         order: photoCount,
+        isApproved: true,
       },
     });
 
@@ -204,14 +205,76 @@ export const deletePhoto = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const photo = await prisma.profilePhoto.findUnique({ where: { id: params.photoId } });
+    if (!photo) {
+      return res.status(404).json({
+        error: 'NOT_FOUND',
+        messageAr: 'الصورة غير موجودة',
+        messageEn: 'Photo not found',
+      });
+    }
+
+    const wasPrimary = photo.isPrimary;
+
     await prisma.profilePhoto.delete({
       where: { id: params.photoId },
     });
+
+    if (wasPrimary) {
+      const nextPhoto = await prisma.profilePhoto.findFirst({
+        where: { profileId: params.id },
+        orderBy: { order: 'asc' },
+      });
+      if (nextPhoto) {
+        await prisma.profilePhoto.update({
+          where: { id: nextPhoto.id },
+          data: { isPrimary: true },
+        });
+      }
+    }
 
     return res.json({ message: 'Photo deleted' });
   } catch (error) {
     console.error('Delete photo error:', error);
     return res.status(500).json({ error: 'INTERNAL', message: 'Failed to delete photo' });
+  }
+};
+
+export const setPrimaryPhoto = async (req: AuthRequest, res: Response) => {
+  try {
+    const params = p(req);
+    const profile = await prisma.profile.findUnique({ where: { id: params.id } });
+    if (!profile || profile.userId !== req.userId) {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        messageAr: 'لا يمكنك تعديل هذا الملف',
+        messageEn: 'You cannot edit this profile',
+      });
+    }
+
+    const photo = await prisma.profilePhoto.findUnique({ where: { id: params.photoId } });
+    if (!photo || photo.profileId !== params.id) {
+      return res.status(404).json({
+        error: 'NOT_FOUND',
+        messageAr: 'الصورة غير موجودة',
+        messageEn: 'Photo not found',
+      });
+    }
+
+    await prisma.profilePhoto.updateMany({
+      where: { profileId: params.id },
+      data: { isPrimary: false },
+    });
+
+    const updated = await prisma.profilePhoto.update({
+      where: { id: params.photoId },
+      data: { isPrimary: true },
+    });
+
+    return res.json(updated);
+  } catch (error) {
+    console.error('Set primary photo error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to set primary photo' });
   }
 };
 

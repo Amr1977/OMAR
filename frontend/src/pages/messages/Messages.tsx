@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../../stores/authStore';
 import { api, photoUrl } from '../../lib/api';
 
 const formatDate = (d: string) => {
@@ -12,15 +13,9 @@ const formatDate = (d: string) => {
   return date.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
 };
 
-const avatarBg = (name: string) => {
-  const colors = ['#1B4332', '#2D6A4F', '#40916C', '#52B788', '#74C69D', '#95D5B2'];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
-};
-
 export default function Messages() {
   const { t } = useTranslation();
+  const { user } = useAuthStore();
   const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +25,10 @@ export default function Messages() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const getPartner = (conv: any) => {
+    return conv.participants?.find((p: any) => p.user.id !== user?.id)?.user;
+  };
 
   if (loading) return (
     <div className="max-w-2xl mx-auto">
@@ -56,16 +55,22 @@ export default function Messages() {
         <div className="space-y-1">
           {conversations.map((conv: any) => {
             const lastMsg = conv.messages?.[0];
-            const name = conv.request?.profile?.displayName || 'محادثة';
+            const partner = getPartner(conv);
+            const name = partner?.profile?.displayName || conv.request?.profile?.displayName || 'محادثة';
+            const avatarUrl = partner?.profile?.photos?.[0]?.url ? photoUrl(partner.profile.photos[0].url) : null;
             return (
               <Link
                 key={conv.id}
                 to={`/messages/${conv.id}`}
                 className="flex items-center gap-4 bg-[var(--color-surface)] p-4 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:shadow-sm transition-all group"
               >
-                <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: avatarBg(name) }}>
-                  {name.charAt(0)}
-                </div>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="w-12 h-12 rounded-full flex-shrink-0 object-cover" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 bg-[var(--color-primary-pale)] flex items-center justify-center text-[var(--color-primary)] font-bold text-sm">
+                    {name.charAt(0)}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
                     <p className="font-semibold text-[var(--color-text)] truncate">{name}</p>

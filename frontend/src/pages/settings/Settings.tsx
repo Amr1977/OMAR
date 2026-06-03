@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/authStore';
 import { changeLanguage } from '../../i18n';
-import { api } from '../../lib/api';
+import { api, photoUrl } from '../../lib/api';
 
 type Section = 'language' | 'subscription' | 'profile' | null;
 
@@ -21,6 +21,8 @@ export default function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api.profile.getMy()
@@ -56,6 +58,53 @@ export default function Settings() {
       showMsg('error', err.message || 'فشل الحفظ');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showMsg('error', 'حجم الصورة يجب أن لا يتجاوز 5 ميجابايت');
+      return;
+    }
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append('photo', file);
+      await api.profile.uploadPhoto(profile.id, fd);
+      const updated = await api.profile.getMy();
+      setProfile(updated);
+      showMsg('success', 'تم رفع الصورة');
+    } catch (err: any) {
+      showMsg('error', err.message || 'فشل رفع الصورة');
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeletePhoto = async (photoId: string) => {
+    if (!profile) return;
+    try {
+      await api.profile.deletePhoto(profile.id, photoId);
+      const updated = await api.profile.getMy();
+      setProfile(updated);
+      showMsg('success', 'تم حذف الصورة');
+    } catch (err: any) {
+      showMsg('error', err.message || 'فشل حذف الصورة');
+    }
+  };
+
+  const handleSetPrimary = async (photoId: string) => {
+    if (!profile) return;
+    try {
+      await api.profile.setPrimaryPhoto(profile.id, photoId);
+      const updated = await api.profile.getMy();
+      setProfile(updated);
+      showMsg('success', 'تم تعيين الصورة الرئيسية');
+    } catch (err: any) {
+      showMsg('error', err.message || 'فشل تعيين الصورة');
     }
   };
 
@@ -285,6 +334,66 @@ export default function Settings() {
                   {renderField('education', profile.education)}
                   {renderField('occupation', profile.occupation)}
                   {renderField('selfIntroduction', profile.selfIntroduction, 'textarea')}
+                </div>
+
+                {/* Photos */}
+                <div className="bg-[var(--color-bg)] rounded-lg p-3">
+                  <p className="text-xs text-[var(--color-muted)] mb-2">{'الصور الشخصية'}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(profile.photos || []).map((photo: any) => (
+                      <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden border border-[var(--color-border)] group">
+                        <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-cover" />
+                        {photo.isPrimary && (
+                          <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-[var(--color-primary)] text-white text-[10px] rounded font-bold">{'أساسي'}</span>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                          {!photo.isPrimary && (
+                            <button
+                              onClick={() => handleSetPrimary(photo.id)}
+                              className="w-7 h-7 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                              title="تعيين كأساسي"
+                            >
+                              <svg className="w-3.5 h-3.5 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                              </svg>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeletePhoto(photo.id)}
+                            className="w-7 h-7 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                            title="حذف"
+                          >
+                            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {(profile.photos || []).length < 6 && (
+                      <label className="aspect-square rounded-lg border-2 border-dashed border-[var(--color-border)] flex items-center justify-center cursor-pointer hover:border-[var(--color-primary)] transition-colors">
+                        {uploadingPhoto ? (
+                          <svg className="w-6 h-6 text-[var(--color-muted)] animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-[var(--color-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        )}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleUploadPhoto}
+                          disabled={uploadingPhoto}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--color-muted)] mt-1">{(profile.photos || []).length} / 6</p>
                 </div>
 
                 {/* Full profile link */}

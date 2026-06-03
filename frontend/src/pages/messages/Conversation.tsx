@@ -23,7 +23,7 @@ export default function Conversation() {
     api.messages.getConversation(id)
       .then((conv: any) => {
         setMessages(conv.messages || []);
-        const other = conv.participants?.find((p: any) => p.id !== user?.id);
+        const other = conv.participants?.find((p: any) => p.user.id !== user?.id)?.user;
         setPartner(other || null);
       })
       .catch(console.error)
@@ -129,9 +129,13 @@ export default function Conversation() {
             return (
               <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} gap-2`}>
                 {!isMine && (
-                  <div className="w-7 h-7 mt-1 rounded-full flex-shrink-0 bg-[var(--color-primary-pale)] flex items-center justify-center text-[var(--color-primary)] font-bold text-[10px]">
-                    {partnerName.charAt(0)}
-                  </div>
+                  partnerAvatar ? (
+                    <img src={partnerAvatar} alt="" className="w-7 h-7 mt-1 rounded-full flex-shrink-0 object-cover" />
+                  ) : (
+                    <div className="w-7 h-7 mt-1 rounded-full flex-shrink-0 bg-[var(--color-primary-pale)] flex items-center justify-center text-[var(--color-primary)] font-bold text-[10px]">
+                      {partnerName.charAt(0)}
+                    </div>
+                  )
                 )}
                 <div className="max-w-[75%]">
                   <div

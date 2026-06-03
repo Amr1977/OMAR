@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api } from '../../lib/api';
+import { api, photoUrl } from '../../lib/api';
 
 export default function MyProfile() {
   const { t } = useTranslation();
@@ -57,7 +57,7 @@ export default function MyProfile() {
             <p className="font-medium">{profile.city}, {profile.countryOfResidence}</p>
           </div>
           <div>
-            <p className="text-sm text-[#6B7280">{t('profile.education')}</p>
+            <p className="text-sm text-[#6B7280]">{t('profile.education')}</p>
             <p className="font-medium">{profile.education}</p>
           </div>
           <div>
@@ -69,6 +69,19 @@ export default function MyProfile() {
             <p className="font-medium">{t(`profile.madhab.${profile.madhab}`)}</p>
           </div>
         </div>
+
+        {(profile.photos?.length > 0) && (
+          <div className="mb-6">
+            <h3 className="font-semibold text-[#1B4332] mb-3">الصور</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {profile.photos.map((photo: any) => (
+                <div key={photo.id} className="aspect-square rounded-lg overflow-hidden border border-[#E5E7EB]">
+                  <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mb-6">
           <h3 className="font-semibold text-[#1B4332] mb-2">{t('profile.selfIntroduction')}</h3>

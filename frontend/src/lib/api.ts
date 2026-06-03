@@ -19,9 +19,12 @@ export const getToken = () => token;
 export const api = {
   async request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
+
+    if (!headers['Content-Type'] && !(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -47,6 +50,13 @@ export const api = {
     return data;
   },
 
+  async upload<T = any>(path: string, formData: FormData): Promise<T> {
+    return this.request<T>(path, {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
   get<T = any>(path: string) {
     return this.request<T>(path);
   },
@@ -54,14 +64,14 @@ export const api = {
   post<T = any>(path: string, body?: any) {
     return this.request<T>(path, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   },
 
   put<T = any>(path: string, body?: any) {
     return this.request<T>(path, {
       method: 'PUT',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   },
 
@@ -86,7 +96,9 @@ export const api = {
     delete: (id: string) => api.delete(`/profiles/${id}`),
     submit: (id: string) => api.post(`/profiles/${id}/submit`),
     toggleVisibility: (id: string, visible: boolean) => api.put(`/profiles/${id}/visibility`, { visible }),
-    uploadPhoto: (id: string, data: any) => api.post(`/profiles/${id}/photos`, data),
+    uploadPhoto: (id: string, formData: FormData) => api.upload(`/profiles/${id}/photos`, formData),
+    setPrimaryPhoto: (profileId: string, photoId: string) =>
+      api.put(`/profiles/${profileId}/photos/${photoId}/primary`),
     deletePhoto: (profileId: string, photoId: string) =>
       api.delete(`/profiles/${profileId}/photos/${photoId}`),
   },

@@ -174,7 +174,7 @@ model ProfilePhoto {
   profileId     String
   profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   url           String
-  cloudinaryId  String
+  cloudinaryId  String?
   isPrimary     Boolean  @default(false)
   order         Int      @default(0)
   isApproved    Boolean  @default(false)
