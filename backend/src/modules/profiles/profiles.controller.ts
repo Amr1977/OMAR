@@ -260,23 +260,39 @@ export const deletePhoto = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    if (photo.profileId !== params.id) {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        messageAr: 'الصورة لا تنتمي لهذا الملف',
+        messageEn: 'Photo does not belong to this profile',
+      });
+    }
+
     const wasPrimary = photo.isPrimary;
 
     await prisma.profilePhoto.delete({
       where: { id: params.photoId },
     });
 
-    if (wasPrimary) {
-      const nextPhoto = await prisma.profilePhoto.findFirst({
-        where: { profileId: params.id },
-        orderBy: { order: 'asc' },
-      });
-      if (nextPhoto) {
+    // Reorder remaining photos
+    const remaining = await prisma.profilePhoto.findMany({
+      where: { profileId: params.id },
+      orderBy: { order: 'asc' },
+    });
+    for (let i = 0; i < remaining.length; i++) {
+      if (remaining[i].order !== i) {
         await prisma.profilePhoto.update({
-          where: { id: nextPhoto.id },
-          data: { isPrimary: true },
+          where: { id: remaining[i].id },
+          data: { order: i },
         });
       }
+    }
+
+    if (wasPrimary && remaining.length > 0) {
+      await prisma.profilePhoto.update({
+        where: { id: remaining[0].id },
+        data: { isPrimary: true },
+      });
     }
 
     return res.json({ message: 'Photo deleted' });
