@@ -164,7 +164,7 @@ export const uploadPhoto = async (req: AuthRequest, res: Response) => {
     let cloudinaryId = req.body.cloudinaryId;
 
     if (!url && req.file) {
-      url = `/uploads/${req.file.filename}`;
+      url = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     }
 
     if (!url) {
