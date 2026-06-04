@@ -6,8 +6,6 @@ import { photoUrl } from '../../lib/api';
 
 const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="#D8F3DC" rx="20"/><text x="20" y="26" text-anchor="middle" fill="#1B4332" font-size="16" font-weight="bold">?</text></svg>');
 
-type MediaItem = { url: string; type: string };
-
 export default function SocialFeed() {
   const { t } = useTranslation();
   const [posts, setPosts] = useState<any[]>([]);
@@ -18,8 +16,9 @@ export default function SocialFeed() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<{ id: string; url: string; type: string; uploading: boolean }[]>([]);
+  const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const privacyLabels: Record<string, string> = {
@@ -28,6 +27,9 @@ export default function SocialFeed() {
     CONNECTIONS: 'المتابعين',
     SELECTED: 'مختار',
   };
+
+  const uploadingCount = mediaPreviews.filter(m => m.uploading).length;
+  const canPublish = (newPost.trim() || mediaUrls.length > 0) && !submitting && uploadingCount === 0;
 
   const fetchPosts = () => {
     setLoading(true);
@@ -40,43 +42,57 @@ export default function SocialFeed() {
 
   useEffect(() => { fetchPosts(); }, [tab, page]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const newPreviews: { id: string; url: string; type: string; uploading: boolean }[] = [];
-    const uploadPromises: Promise<void>[] = [];
-    Array.from(files).forEach((file) => {
+    setUploadError('');
+    const entries = Array.from(files).map((file) => {
       const id = Math.random().toString(36).slice(2);
       const previewUrl = URL.createObjectURL(file);
-      newPreviews.push({ id, url: previewUrl, type: file.type, uploading: true });
-      const fd = new FormData();
-      fd.append('media', file);
-      uploadPromises.push(
-        api.social.uploadMedia(fd).then((res: any) => {
-          setMediaItems(prev => [...prev, { url: res.url, type: file.type }]);
-          setMediaPreviews(prev => prev.map(p => p.id === id ? { ...p, uploading: false } : p));
-        }).catch(() => {
-          setMediaPreviews(prev => prev.filter(p => p.id !== id));
-        })
-      );
+      return { file, id, previewUrl };
     });
+    const newPreviews = entries.map(e => ({ id: e.id, url: e.previewUrl, type: e.file.type, uploading: true }));
     setMediaPreviews(prev => [...prev, ...newPreviews]);
+    const results = await Promise.allSettled(
+      entries.map(e => {
+        const fd = new FormData();
+        fd.append('media', e.file);
+        return api.social.uploadMedia(fd).then((res: any) => ({ id: e.id, url: res.url }));
+      })
+    );
+    const succeeded: { id: string; url: string }[] = [];
+    const failed: string[] = [];
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') {
+        succeeded.push(r.value);
+      } else {
+        failed.push(entries[i].id);
+        setUploadError(`فشل رفع ${failed.length} ملف(ملفات)`);
+      }
+    });
+    setMediaUrls(prev => [...prev, ...succeeded.map(s => s.url)]);
+    setMediaPreviews(prev => prev.map(p => {
+      if (failed.includes(p.id)) return { ...p, uploading: false };
+      const found = succeeded.find(s => s.id === p.id);
+      return found ? { ...p, uploading: false } : p;
+    }));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeMedia = (idx: number) => {
-    setMediaItems(prev => prev.filter((_, i) => i !== idx));
+    setMediaUrls(prev => prev.filter((_, i) => i !== idx));
     setMediaPreviews(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleCreatePost = async () => {
-    if (!newPost.trim() && mediaItems.length === 0) return;
+    if (!canPublish) return;
     setSubmitting(true);
     try {
-      await api.social.createPost({ content: newPost, privacy: postPrivacy, mediaUrls: mediaItems.map(m => m.url) });
+      await api.social.createPost({ content: newPost, privacy: postPrivacy, mediaUrls });
       setNewPost('');
-      setMediaItems([]);
+      setMediaUrls([]);
       setMediaPreviews([]);
+      setUploadError('');
       setPage(1);
       fetchPosts();
     } catch (e) {} finally { setSubmitting(false); }
@@ -163,9 +179,15 @@ export default function SocialFeed() {
             <option value="CONNECTIONS">المتابعين</option>
             <option value="PRIVATE">خاص</option>
           </select>
+          {uploadingCount > 0 && (
+            <span className="text-xs text-amber-500">جاري رفع {uploadingCount} ملف...</span>
+          )}
+          {uploadError && (
+            <span className="text-xs text-red-500">{uploadError}</span>
+          )}
           <span className="text-xs text-[var(--color-muted)]">{newPost.length} حرف</span>
-          <button onClick={handleCreatePost} disabled={submitting || (!newPost.trim() && mediaItems.length === 0)} className="mr-auto px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-light)] disabled:opacity-50">
-            {submitting ? 'جاري النشر...' : 'نشر'}
+          <button onClick={handleCreatePost} disabled={!canPublish} className="mr-auto px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-light)] disabled:opacity-50">
+            {submitting ? 'جاري النشر...' : uploadingCount > 0 ? `جاري الرفع...` : 'نشر'}
           </button>
         </div>
       </div>
