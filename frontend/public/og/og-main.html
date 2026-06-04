@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1200, height=630">
+  <title>حفصة – OG Main</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1200px; height: 630px; overflow: hidden;
+      background-color: #0E2B1E;
+      background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23DAA520'%3E%3Cpolygon points='40,2 52,14 68,14 68,28 80,40 68,52 68,66 52,66 40,78 28,66 12,66 12,52 0,40 12,28 12,14 28,14' fill='none' stroke='%23DAA520' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 80px 80px;
+      font-family: 'Scheherazade New', 'Amiri', serif;
+      direction: rtl;
+      display: flex;
+      flex-direction: column;
+    }
+    .gold-border-top {
+      height: 14px;
+      width: 100%;
+      background: repeating-linear-gradient(90deg,
+        #1B4332 0px, #1B4332 20px,
+        #DAA520 20px, #DAA520 22px,
+        #1B4332 22px, #1B4332 42px,
+        #B8860B 42px, #B8860B 44px
+      );
+    }
+    .gold-border-bottom {
+      height: 14px;
+      width: 100%;
+      background: repeating-linear-gradient(90deg,
+        #1B4332 0px, #1B4332 20px,
+        #DAA520 20px, #DAA520 22px,
+        #1B4332 22px, #1B4332 42px,
+        #B8860B 42px, #B8860B 44px
+      );
+    }
+    .inner-frame {
+      flex: 1;
+      margin: 18px 24px;
+      border: 2px solid #DAA520;
+      border-radius: 0;
+      display: flex;
+      position: relative;
+    }
+    .right-panel {
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-left: 1px solid rgba(218,165,32,0.3);
+      padding: 20px;
+    }
+    .ring {
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      border: 3px solid #DAA520;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(27,67,50,0.6);
+      position: relative;
+    }
+    .ring::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(218,165,32,0.3);
+    }
+    .ring::after {
+      content: '';
+      position: absolute;
+      inset: 16px;
+      border-radius: 50%;
+      border: 1px solid rgba(218,165,32,0.15);
+    }
+    .ring-glyph {
+      font-family: 'Amiri', serif;
+      font-size: 76px;
+      font-weight: 700;
+      color: #DAA520;
+      line-height: 1;
+    }
+    .ring-label {
+      font-family: 'Scheherazade New', serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(245,230,184,0.5);
+      letter-spacing: 4px;
+      margin-top: 2px;
+    }
+    .dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #DAA520;
+      opacity: 0.4;
+    }
+    .dot:nth-child(2) { opacity: 0.6; }
+    .dot:nth-child(3) { opacity: 0.8; }
+    .dot:nth-child(4) { opacity: 1; }
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 30px 40px 30px 30px;
+    }
+    .eyebrow {
+      font-family: 'Scheherazade New', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: rgba(200,230,210,0.85);
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .eyebrow::after {
+      content: ' ──────';
+      color: #DAA520;
+      font-weight: 600;
+      margin-right: 8px;
+      letter-spacing: 2px;
+    }
+    .main-title {
+      font-family: 'Amiri', serif;
+      font-size: 82px;
+      font-weight: 700;
+      color: #F5E6B8;
+      line-height: 1.05;
+      margin: 0;
+    }
+    .main-title-english {
+      font-family: 'Scheherazade New', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: rgba(218,165,32,0.6);
+      letter-spacing: 6px;
+      margin-top: 2px;
+    }
+    .gold-rule {
+      width: 120px;
+      height: 3px;
+      background: #DAA520;
+      margin: 14px 0;
+    }
+    .tagline {
+      font-family: 'Scheherazade New', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: rgba(200,230,210,0.85);
+      line-height: 1.6;
+      max-width: 620px;
+    }
+    .tagline .gold-bold {
+      color: #DAA520;
+      font-weight: 700;
+    }
+    .pills {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(45,106,79,0.5);
+      border: 1px solid rgba(218,165,32,0.3);
+      padding: 6px 14px;
+      font-family: 'Scheherazade New', serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #F5E6B8;
+    }
+    .pill .check {
+      color: #2D6A4F;
+      font-weight: 700;
+    }
+    .bottom-gradient {
+      height: 5px;
+      width: 100%;
+      background: linear-gradient(90deg, #1B4332, #DAA520, #1B4332);
+    }
+  </style>
+</head>
+<body>
+  <div class="gold-border-top"></div>
+  <div class="inner-frame">
+    <div class="right-panel">
+      <div class="ring">
+        <div style="text-align:center;">
+          <div class="ring-glyph">حـ</div>
+          <div class="ring-label">HAFSA</div>
+        </div>
+      </div>
+      <div class="dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="eyebrow">شبكة إسلامية للتعارف بقصد الزواج</div>
+      <div class="main-title">حفصة</div>
+      <div class="main-title-english">H A F S A</div>
+      <div class="gold-rule"></div>
+      <div class="tagline">
+        المنصة الإسلامية الأولى التي تضع <span class="gold-bold">ولي الأمر</span> في صلب عملية التعارف
+      </div>
+      <div class="pills">
+        <span class="pill"><span class="check">✓</span> بإشراف ولي الأمر</span>
+        <span class="pill"><span class="check">✓</span> خصوصية تامة</span>
+        <span class="pill"><span class="check">✓</span> وفق الضوابط الشرعية</span>
+      </div>
+    </div>
+  </div>
+  <div class="gold-border-bottom"></div>
+  <div class="bottom-gradient"></div>
+</body>
+</html>

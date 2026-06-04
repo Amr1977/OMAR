@@ -6,6 +6,7 @@ dist/
 .DS_Store
 backend/uploads/
 *.html
+!frontend/public/og/*.html
 opencode-prompt-*.md
 hafsa_prompt.md
 *.tsbuildinfo
