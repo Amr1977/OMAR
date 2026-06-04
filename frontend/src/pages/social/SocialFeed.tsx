@@ -19,7 +19,10 @@ export default function SocialFeed() {
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<{ id: string; url: string; type: string; uploading: boolean }[]>([]);
   const [uploadError, setUploadError] = useState('');
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
 
   const privacyLabels: Record<string, string> = {
     PUBLIC: 'عام',
@@ -110,6 +113,27 @@ export default function SocialFeed() {
   const handleDelete = async (postId: string) => {
     await api.social.deletePost(postId);
     setPosts(posts.filter(p => p.id !== postId));
+  };
+
+  const startEdit = (post: any) => {
+    setEditingPostId(post.id);
+    setEditContent(post.content);
+    setTimeout(() => editInputRef.current?.focus(), 0);
+  };
+
+  const cancelEdit = () => {
+    setEditingPostId(null);
+    setEditContent('');
+  };
+
+  const handleSaveEdit = async (postId: string) => {
+    if (!editContent.trim()) return;
+    setSubmitting(true);
+    try {
+      const updated = await api.social.updatePost(postId, { content: editContent });
+      setPosts(posts.map(p => p.id === postId ? updated : p));
+      cancelEdit();
+    } catch (e) {} finally { setSubmitting(false); }
   };
 
   const userName = (p: any) => p.user.profile?.displayName || p.user.role;
@@ -214,7 +238,10 @@ export default function SocialFeed() {
                   </div>
                 </Link>
                 {post.user.id === localStorage.getItem('user_id') && (
-                  <button onClick={() => handleDelete(post.id)} className="text-xs text-red-400 hover:text-red-600">حذف</button>
+                  <div className="flex gap-2">
+                    <button onClick={() => startEdit(post)} className="text-xs text-blue-400 hover:text-blue-600">تعديل</button>
+                    <button onClick={() => handleDelete(post.id)} className="text-xs text-red-400 hover:text-red-600">حذف</button>
+                  </div>
                 )}
               </div>
 
@@ -228,6 +255,24 @@ export default function SocialFeed() {
               )}
 
               {/* Content */}
+              {editingPostId === post.id ? (
+                <div className="mb-3">
+                  <textarea
+                    ref={editInputRef}
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full border border-[var(--color-border)] rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-[var(--color-primary)] h-24"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => handleSaveEdit(post.id)} disabled={submitting || !editContent.trim()} className="px-4 py-1.5 bg-[var(--color-primary)] text-white rounded-lg text-xs font-medium hover:bg-[var(--color-primary-light)] disabled:opacity-50">
+                      {submitting ? 'جاري الحفظ...' : 'حفظ'}
+                    </button>
+                    <button onClick={cancelEdit} className="px-4 py-1.5 border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-muted)] hover:text-[var(--color-text)]">
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              ) : (
               <Link to={`/social/post/${post.id}`}>
                 <p className="text-sm text-[var(--color-text)] leading-relaxed mb-3 whitespace-pre-wrap">{post.content}</p>
                 {post.mediaUrls?.length > 0 && (
@@ -242,6 +287,7 @@ export default function SocialFeed() {
                   </div>
                 )}
               </Link>
+              )}
 
               {/* Actions */}
               <div className="flex items-center gap-6 pt-3 border-t border-[var(--color-border)]">

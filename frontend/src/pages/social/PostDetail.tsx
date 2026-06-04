@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, photoUrl } from '../../lib/api';
@@ -14,6 +14,9 @@ export default function PostDetail() {
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -46,6 +49,28 @@ export default function PostDetail() {
     setPost({ ...post, comments: post.comments.filter((c: any) => c.id !== commentId), _count: { ...post._count, comments: post._count.comments - 1 } });
   };
 
+  const startEdit = () => {
+    if (!post) return;
+    setEditContent(post.content);
+    setEditing(true);
+    setTimeout(() => editInputRef.current?.focus(), 0);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setEditContent('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!post || !editContent.trim()) return;
+    setSubmitting(true);
+    try {
+      const updated = await api.social.updatePost(post.id, { content: editContent });
+      setPost(updated);
+      cancelEdit();
+    } catch (e) {} finally { setSubmitting(false); }
+  };
+
   const avatar = (p: any) => photoUrl(p.user?.profile?.photos?.[0]?.url) || DEFAULT_AVATAR;
   const userName = (p: any) => p.user?.profile?.displayName || p.user?.role || t('social.anonymous');
 
@@ -56,29 +81,53 @@ export default function PostDetail() {
     <div className="max-w-2xl mx-auto">
       <Link to="/social" className="text-sm text-[var(--color-primary)] hover:underline mb-4 inline-block">&larr; {t('social.back')}</Link>
 
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <Link to="/profile/my" className="flex items-center gap-3">
-            <img src={avatar(post)} alt="" className="w-10 h-10 rounded-full object-cover" />
-            <div>
-              <p className="text-sm font-semibold text-[var(--color-primary)]">{userName(post)}</p>
-              <p className="text-xs text-[var(--color-muted)]">{new Date(post.createdAt).toLocaleDateString('ar-SA')}</p>
-            </div>
-          </Link>
-        </div>
-
-        <p className="text-sm text-[var(--color-text)] leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
-        {post.mediaUrls?.length > 0 && (
-          <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
-            {post.mediaUrls.map((url: string, i: number) => (
-              url.startsWith('data:video/') ? (
-                <video key={i} src={url} controls className="rounded-lg w-full h-64 object-cover" />
-              ) : (
-                <img key={i} src={url} alt="" className="rounded-lg w-full h-64 object-cover" />
-              )
-            ))}
+        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <Link to="/profile/my" className="flex items-center gap-3">
+              <img src={avatar(post)} alt="" className="w-10 h-10 rounded-full object-cover" />
+              <div>
+                <p className="text-sm font-semibold text-[var(--color-primary)]">{userName(post)}</p>
+                <p className="text-xs text-[var(--color-muted)]">{new Date(post.createdAt).toLocaleDateString('ar-SA')}</p>
+              </div>
+            </Link>
+            {post.user?.id === user?.id && !editing && (
+              <button onClick={startEdit} className="text-xs text-blue-400 hover:text-blue-600">تعديل</button>
+            )}
           </div>
-        )}
+
+          {editing ? (
+            <div className="mb-4">
+              <textarea
+                ref={editInputRef}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full border border-[var(--color-border)] rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-[var(--color-primary)] h-24"
+              />
+              <div className="flex gap-2 mt-2">
+                <button onClick={handleSaveEdit} disabled={submitting || !editContent.trim()} className="px-4 py-1.5 bg-[var(--color-primary)] text-white rounded-lg text-xs font-medium hover:bg-[var(--color-primary-light)] disabled:opacity-50">
+                  {submitting ? 'جاري الحفظ...' : 'حفظ'}
+                </button>
+                <button onClick={cancelEdit} className="px-4 py-1.5 border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-muted)] hover:text-[var(--color-text)]">
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-[var(--color-text)] leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
+              {post.mediaUrls?.length > 0 && (
+                <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
+                  {post.mediaUrls.map((url: string, i: number) => (
+                    url.startsWith('data:video/') ? (
+                      <video key={i} src={url} controls className="rounded-lg w-full h-64 object-cover" />
+                    ) : (
+                      <img key={i} src={url} alt="" className="rounded-lg w-full h-64 object-cover" />
+                    )
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
         <div className="flex items-center gap-6 pt-4 border-t border-[var(--color-border)]">
           <button onClick={handleLike} className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked?.[0] || post.liked ? 'text-red-500' : 'text-[var(--color-muted)] hover:text-red-500'}`}>

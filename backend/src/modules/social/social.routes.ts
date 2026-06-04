@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/auth';
 import { uploadMedia } from '../../config/upload';
 import {
-  createPost, getFeed, getPost, deletePost, toggleLike,
+  createPost, updatePost, getFeed, getPost, deletePost, toggleLike,
   addComment, deleteComment, toggleFollow, getFollowers, getFollowing,
   getUserPosts, getReputation, getExploreFeed, updatePostPrivacy,
   uploadPostMedia,
@@ -14,6 +14,7 @@ router.use(authenticate);
 
 router.post('/posts/media', uploadMedia.single('media'), uploadPostMedia);
 router.post('/posts', createPost);
+router.put('/posts/:id', updatePost);
 router.get('/feed', getFeed);
 router.get('/explore', getExploreFeed);
 router.get('/posts/:id', getPost);

@@ -195,6 +195,39 @@ export const getPost = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const updatePost = async (req: AuthRequest, res: Response) => {
+  try {
+    const postId = id(req);
+    const post = await prisma.post.findUnique({ where: { id: postId } });
+    if (!post || post.userId !== req.userId) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your post' });
+    }
+    const { content, mediaUrls, privacy, allowedUserIds } = req.body;
+    if (content !== undefined && !content?.trim()) {
+      return res.status(400).json({ error: 'EMPTY_CONTENT', message: 'Post content cannot be empty' });
+    }
+    if (privacy === 'SELECTED') {
+      await prisma.postPrivacyUser.deleteMany({ where: { postId } });
+    }
+    const updated = await prisma.post.update({
+      where: { id: postId },
+      data: {
+        ...(content !== undefined ? { content } : {}),
+        ...(mediaUrls !== undefined ? { mediaUrls } : {}),
+        ...(privacy !== undefined ? { privacy: privacy as any } : {}),
+        ...(privacy === 'SELECTED' && allowedUserIds?.length
+          ? { allowedUsers: { create: allowedUserIds.map((uid: string) => ({ userId: uid })) } }
+          : {}),
+      },
+      include: postIncludeFull(req.userId!),
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('Update post error:', error);
+    res.status(500).json({ error: 'INTERNAL', message: 'Failed to update post' });
+  }
+};
+
 export const deletePost = async (req: AuthRequest, res: Response) => {
   try {
     const post = await prisma.post.findUnique({ where: { id: id(req) } });
