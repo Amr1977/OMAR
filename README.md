@@ -12,7 +12,7 @@ The platform is named after **Hafsa bint Umar** (حفصة بنت عمر), one of
 ## Features
 
 - **Profile Management** — 8-step wizard for detailed profiles (40+ fields covering personal specs, education, work, marriage preferences, family, residence, partner criteria)
-- **Photo Gallery** — Upload up to 6 photos, set primary, delete and reorder (stored as base64 data URLs)
+- **Photo Gallery** — Upload up to 6 photos, set primary, delete and reorder (stored as base64 data URLs in the database — no filesystem or external storage required)
 - **Role-based Access** — GROOM (راغب في الزواج), GUARDIAN (ولي), BOTH, ADMIN
 - **Guardian Browsing** — Guardians browse groom profiles; contact requests initiate conversations
 - **Real-time Messaging** — Secure chat via Socket.IO with typing indicators
@@ -53,7 +53,7 @@ The platform is named after **Hafsa bint Umar** (حفصة بنت عمر), one of
 | Zod | Input validation |
 | OpenAI API | AI suggestions (optional) |
 | Stripe | Payment processing |
-| Cloudinary | Cloud image storage (optional) |
+| Cloudinary | Cloud image storage (optional — not used in primary flow) |
 
 ## Getting Started
 
@@ -172,7 +172,8 @@ HAFSA/
 | `GET /profiles/:id` | Profile detail |
 | `POST /profiles` | Create profile |
 | `PUT /profiles/:id` | Update profile |
-| `POST /profiles/:id/photos` | Upload photo |
+| `POST /profiles/:id/photos` | Upload photo (stored as base64 data URL in DB) |
+| `PUT /profiles/:id/photos/:photoId/primary` | Set primary photo |
 | `DELETE /profiles/:id/photos/:photoId` | Delete photo |
 | `GET /messages/conversations` | List conversations |
 | `GET /messages/conversations/:id` | Get conversation messages |
