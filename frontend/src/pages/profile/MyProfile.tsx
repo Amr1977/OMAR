@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, photoUrl } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
+import ImageViewer from '../../components/ImageViewer';
 
 const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="#D8F3DC" rx="20"/><text x="20" y="26" text-anchor="middle" fill="#1B4332" font-size="16" font-weight="bold">?</text></svg>');
 
@@ -16,6 +17,7 @@ export default function MyProfile() {
   const [postsLoading, setPostsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [viewerImg, setViewerImg] = useState<string | null>(null);
 
   useEffect(() => {
     api.profile.getMy()
@@ -146,7 +148,7 @@ export default function MyProfile() {
             <div className="grid grid-cols-3 gap-3">
               {profile.photos.map((photo: any) => (
                 <div key={photo.id} className="aspect-square rounded-lg overflow-hidden border border-[#E5E7EB]">
-                  <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-cover" />
+                  <img src={photoUrl(photo.url)} alt="" className="w-full h-full object-cover cursor-pointer" onClick={() => setViewerImg(photoUrl(photo.url))} />
                 </div>
               ))}
             </div>
@@ -288,7 +290,7 @@ export default function MyProfile() {
                         isVideo(url) ? (
                           <video key={i} src={url} controls className="rounded-lg w-full h-48 object-cover" />
                         ) : (
-                          <img key={i} src={url} alt="" className="rounded-lg w-full h-48 object-cover" />
+                          <img key={i} src={url} alt="" className="rounded-lg w-full h-48 object-cover cursor-pointer" onClick={() => setViewerImg(url)} />
                         )
                       ))}
                     </div>
@@ -344,6 +346,7 @@ export default function MyProfile() {
           </div>
         )}
       </div>
+      {viewerImg && <ImageViewer src={viewerImg} onClose={() => setViewerImg(null)} />}
     </div>
   );
 }

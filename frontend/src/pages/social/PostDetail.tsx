@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, photoUrl } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
+import ImageViewer from '../../components/ImageViewer';
 
 const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="#D8F3DC" rx="20"/><text x="20" y="26" text-anchor="middle" fill="#1B4332" font-size="16" font-weight="bold">?</text></svg>');
 
@@ -18,6 +19,7 @@ export default function PostDetail() {
   const [editContent, setEditContent] = useState('');
   const [editMediaUrls, setEditMediaUrls] = useState<string[]>([]);
   const [editNewMediaPreviews, setEditNewMediaPreviews] = useState<{ id: string; url: string; type: string; uploading: boolean }[]>([]);
+  const [viewerImg, setViewerImg] = useState<string | null>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -210,7 +212,7 @@ export default function PostDetail() {
                     url.startsWith('data:video/') ? (
                       <video key={i} src={url} controls className="rounded-lg w-full h-64 object-cover" />
                     ) : (
-                      <img key={i} src={url} alt="" className="rounded-lg w-full h-64 object-cover" />
+                      <img key={i} src={url} alt="" className="rounded-lg w-full h-64 object-cover cursor-pointer" onClick={() => setViewerImg(url)} />
                     )
                   ))}
                 </div>
@@ -277,6 +279,7 @@ export default function PostDetail() {
           </div>
         )}
       </div>
+      {viewerImg && <ImageViewer src={viewerImg} onClose={() => setViewerImg(null)} />}
     </div>
   );
 }
