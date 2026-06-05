@@ -65,6 +65,7 @@ export default function AdminSubscriptions() {
             <thead>
               <tr className="border-b border-[#E5E7EB] dark:border-gray-700">
                 <th className="text-right p-3 text-[#6B7280] font-medium">المستخدم</th>
+                <th className="text-right p-3 text-[#6B7280] font-medium">المدة</th>
                 <th className="text-right p-3 text-[#6B7280] font-medium">المبلغ</th>
                 <th className="text-right p-3 text-[#6B7280] font-medium">طريقة الدفع</th>
                 <th className="text-right p-3 text-[#6B7280] font-medium">الحالة</th>
@@ -77,6 +78,7 @@ export default function AdminSubscriptions() {
               {subscriptions.map((s: any) => (
                 <tr key={s.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.user?.email || s.user?.phone || s.user?.id?.slice(0, 8)}</td>
+                  <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.durationMonths || 1} شهر</td>
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.amount} EGP</td>
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.paymentMethod === 'INSTAPAY' ? 'إنستاباي' : 'فودافون كاش'}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badge(s.status)}`}>{s.status}</span></td>

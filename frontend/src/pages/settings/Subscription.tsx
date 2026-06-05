@@ -6,6 +6,13 @@ import { useAuthStore } from '../../stores/authStore';
 const PAYMENT_NUMBER = '01094450141';
 const PAYMENT_NAME = 'Amr Lotfy';
 
+const PLANS = [
+  { months: 1, price: 150, label: 'شهر', popular: false },
+  { months: 3, price: 350, label: '3 أشهر', popular: false },
+  { months: 6, price: 600, label: '6 أشهر', popular: false },
+  { months: 12, price: 1000, label: '12 شهر', popular: true },
+];
+
 const PREMIUM_FEATURES = [
   'إرسال أكثر من 3 طلبات تواصل شهرياً',
   'مشاهدة الملفات الشخصية كاملة',
@@ -19,6 +26,7 @@ export default function Subscription() {
   const { user } = useAuthStore();
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMonths, setSelectedMonths] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<'INSTAPAY' | 'VODAFONE_CASH'>('INSTAPAY');
   const [note, setNote] = useState('');
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -26,6 +34,8 @@ export default function Subscription() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const selectedPlan = PLANS.find(p => p.months === selectedMonths) || PLANS[0];
 
   useEffect(() => {
     api.subscriptions.getMy()
@@ -52,6 +62,7 @@ export default function Subscription() {
     setSubmitting(true);
     try {
       const res: any = await api.subscriptions.create({
+        durationMonths: selectedMonths,
         paymentMethod,
         transactionImage: imageBase64,
         note: note || undefined,
@@ -154,68 +165,57 @@ export default function Subscription() {
         </div>
       )}
 
-      {/* Plan comparison */}
+      {/* Plan selection */}
       {!isPremium && !pendingSub && (
         <div>
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {/* Free plan */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-6 opacity-75">
-              <div className="text-center mb-4">
-                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-[#1B4332] dark:text-gray-100">مجاني</h3>
-                <p className="text-2xl font-bold text-[#1B4332] dark:text-gray-100 mt-1">0 EGP</p>
-              </div>
-              <ul className="space-y-2.5 mb-6">
-                <li className="flex items-center gap-2 text-sm text-[#6B7280]">
-                  <span className="text-gray-300">✓</span> ملف شخصي واحد
-                </li>
-                <li className="flex items-center gap-2 text-sm text-[#6B7280]">
-                  <span className="text-gray-300">✓</span> 3 طلبات تواصل/شهر
-                </li>
-                <li className="flex items-center gap-2 text-sm text-[#6B7280]">
-                  <span className="text-gray-300">✓</span> تصفح الملفات الأساسي
-                </li>
-              </ul>
-              <div className="text-center">
-                <span className="inline-block px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg text-sm font-medium">
-                  خطتك الحالية
-                </span>
-              </div>
-            </div>
+          {/* Plan cards */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {PLANS.map((plan) => {
+              const selected = selectedMonths === plan.months;
+              return (
+                <button
+                  key={plan.months}
+                  onClick={() => setSelectedMonths(plan.months)}
+                  className={`relative p-5 rounded-2xl border-2 text-center transition-all ${
+                    selected
+                      ? 'border-[#DAA520] bg-[#DAA520]/5 dark:bg-[#DAA520]/10 shadow-md'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#DAA520] text-[#1B4332] px-3 py-0.5 rounded-full text-xs font-bold whitespace-nowrap">
+                      الأفضل
+                    </div>
+                  )}
+                  <p className="text-sm text-[#6B7280] dark:text-gray-400 mt-1">{plan.label}</p>
+                  <p className={`text-2xl font-bold mt-2 ${selected ? 'text-[#DAA520]' : 'text-[#1B4332] dark:text-gray-100'}`}>
+                    {plan.price} <span className="text-sm font-normal">EGP</span>
+                  </p>
+                  <p className="text-xs text-[#6B7280] dark:text-gray-500 mt-1">
+                    {Math.round(plan.price / plan.months)} EGP/شهر
+                  </p>
+                  {selected && (
+                    <div className="mt-3">
+                      <span className="inline-block w-3 h-3 bg-[#DAA520] rounded-full" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Premium plan */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-[#DAA520] dark:border-[#DAA520] p-6 relative shadow-lg">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#DAA520] text-[#1B4332] px-4 py-0.5 rounded-full text-xs font-bold">
-                الأفضل
-              </div>
-              <div className="text-center mb-4 mt-2">
-                <div className="w-12 h-12 bg-[#DAA520]/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-6 h-6 text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          {/* Features card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-8">
+            <h3 className="font-bold text-[#1B4332] dark:text-gray-100 mb-3 text-sm">المميزات المشمولة:</h3>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {PREMIUM_FEATURES.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-[#1B4332] dark:text-gray-200">
+                  <svg className="w-4 h-4 text-[#DAA520] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
+                  {f}
                 </div>
-                <h3 className="text-lg font-bold text-[#1B4332] dark:text-gray-100">مميز</h3>
-                <p className="text-2xl font-bold text-[#DAA520] mt-1">50 <span className="text-sm">EGP</span> <span className="text-sm text-[#6B7280]">/ شهر</span></p>
-              </div>
-              <ul className="space-y-2.5 mb-6">
-                {PREMIUM_FEATURES.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-[#1B4332] dark:text-gray-200">
-                    <svg className="w-4 h-4 text-[#DAA520] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className="text-center">
-                <span className="inline-block px-4 py-2 bg-[#DAA520]/10 text-[#DAA520] rounded-lg text-sm font-medium">
-                  اختر هذه الخطة
-                </span>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -225,7 +225,7 @@ export default function Subscription() {
               <svg className="w-5 h-5 text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
-              بيانات الدفع
+              بيانات الدفع — {selectedPlan.price} EGP
             </h2>
 
             {/* Bank details */}
@@ -354,7 +354,7 @@ export default function Subscription() {
                   </svg>
                   جاري الإرسال...
                 </span>
-              ) : 'تأكيد الاشتراك - 50 EGP'}
+              ) : `تأكيد الاشتراك - ${selectedPlan.price} EGP`}
             </button>
 
             <p className="text-xs text-[#6B7280] dark:text-gray-500 text-center mt-4">

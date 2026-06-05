@@ -2,15 +2,24 @@ import { Response } from 'express';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
 
+const PLAN_PRICES: Record<number, number> = {
+  1: 150,
+  3: 350,
+  6: 600,
+  12: 1000,
+};
+
 export const createSubscription = async (req: AuthRequest, res: Response) => {
   try {
-    const { paymentMethod, transactionImage, note } = req.body;
+    const { paymentMethod, transactionImage, note, durationMonths = 1 } = req.body;
     if (!paymentMethod) {
       return res.status(400).json({ error: 'VALIDATION', message: 'paymentMethod is required' });
     }
     if (!['INSTAPAY', 'VODAFONE_CASH'].includes(paymentMethod)) {
       return res.status(400).json({ error: 'VALIDATION', message: 'Invalid payment method' });
     }
+    const months = [1, 3, 6, 12].includes(durationMonths) ? durationMonths : 1;
+    const amount = PLAN_PRICES[months];
 
     const existing = await prisma.subscription.findFirst({
       where: { userId: req.userId!, status: 'PENDING' },
@@ -22,7 +31,8 @@ export const createSubscription = async (req: AuthRequest, res: Response) => {
     const subscription = await prisma.subscription.create({
       data: {
         userId: req.userId!,
-        amount: 50,
+        amount,
+        durationMonths: months,
         paymentMethod,
         transactionImage: transactionImage || null,
         note: note || null,
@@ -80,7 +90,7 @@ export const verifySubscription = async (req: AuthRequest, res: Response) => {
 
     const now = new Date();
     const endDate = new Date(now);
-    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setMonth(endDate.getMonth() + subscription.durationMonths);
 
     const [updated] = await prisma.$transaction([
       prisma.subscription.update({
@@ -96,7 +106,7 @@ export const verifySubscription = async (req: AuthRequest, res: Response) => {
           adminId: req.userId!,
           action: 'VERIFY_SUBSCRIPTION',
           targetId: id,
-          details: { userId: subscription.userId },
+          details: { userId: subscription.userId, durationMonths: subscription.durationMonths },
         },
       }),
     ]);

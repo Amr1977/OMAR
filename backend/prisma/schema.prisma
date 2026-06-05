@@ -404,7 +404,8 @@ model Subscription {
   id               String        @id @default(cuid())
   userId           String
   user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount           Float         @default(50)
+  amount           Float         @default(150)
+  durationMonths   Int           @default(1)
   paymentMethod    PaymentMethod
   transactionImage String?       @db.Text
   note             String?       @db.Text
