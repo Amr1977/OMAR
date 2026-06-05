@@ -8,7 +8,7 @@ export const createDonation = async (req: AuthRequest, res: Response) => {
     if (!amount || !paymentMethod) {
       return res.status(400).json({ error: 'VALIDATION', message: 'amount and paymentMethod are required' });
     }
-    if (!['INSTAPAY', 'VODAFONE_CASH'].includes(paymentMethod)) {
+    if (!['INSTAPAY', 'VODAFONE_CASH', 'USDT_TRC20'].includes(paymentMethod)) {
       return res.status(400).json({ error: 'VALIDATION', message: 'Invalid payment method' });
     }
     if (amount < 1) {

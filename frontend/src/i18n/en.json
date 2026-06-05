@@ -25,6 +25,7 @@
     "role_groom": "Seeking Marriage",
     "role_guardian": "Guardian",
     "role_both": "Both",
+    "role_social": "Social",
     "role": "Role",
     "verifyOtp": "Verify OTP",
     "sendOtp": "Send Verification Code"
@@ -283,7 +284,8 @@
     "submit": "Confirm Subscription",
     "success": "Subscription request submitted",
     "instapay": "Instapay",
-    "vodafoneCash": "Vodafone Cash"
+    "vodafoneCash": "Vodafone Cash",
+    "usdtTrc20": "USDT TRC20"
   },
   "donation": {
     "title": "Donate",
@@ -293,6 +295,7 @@
     "submit": "Donate",
     "success": "Donation submitted",
     "instapay": "Instapay",
-    "vodafoneCash": "Vodafone Cash"
+    "vodafoneCash": "Vodafone Cash",
+    "usdtTrc20": "USDT TRC20"
   }
 }

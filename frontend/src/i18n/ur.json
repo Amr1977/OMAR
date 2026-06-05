@@ -26,6 +26,7 @@
     "role_groom": "شادی کے خواہشمند",
     "role_guardian": "ولی",
     "role_both": "دونوں",
+    "role_social": "سوشل",
     "verifyOtp": "OTP تصدیق",
     "sendOtp": "تصدیقی کوڈ بھیجیں"
   },
@@ -283,7 +284,8 @@
     "submit": "رکنیت کی تصدیق کریں",
     "success": "رکنیت کی درخواست جمع کر دی گئی",
     "instapay": "انسٹاپے",
-    "vodafoneCash": "ووڈافون کیش"
+    "vodafoneCash": "ووڈافون کیش",
+    "usdtTrc20": "USDT TRC20"
   },
   "donation": {
     "title": "عطیہ",
@@ -293,6 +295,7 @@
     "submit": "عطیہ کریں",
     "success": "عطیہ جمع کر دیا گیا",
     "instapay": "انسٹاپے",
-    "vodafoneCash": "ووڈافون کیش"
+    "vodafoneCash": "ووڈافون کیش",
+    "usdtTrc20": "USDT TRC20"
   }
 }

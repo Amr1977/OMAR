@@ -15,7 +15,7 @@ export const createSubscription = async (req: AuthRequest, res: Response) => {
     if (!paymentMethod) {
       return res.status(400).json({ error: 'VALIDATION', message: 'paymentMethod is required' });
     }
-    if (!['INSTAPAY', 'VODAFONE_CASH'].includes(paymentMethod)) {
+    if (!['INSTAPAY', 'VODAFONE_CASH', 'USDT_TRC20'].includes(paymentMethod)) {
       return res.status(400).json({ error: 'VALIDATION', message: 'Invalid payment method' });
     }
     const months = [1, 3, 6, 12].includes(durationMonths) ? durationMonths : 1;

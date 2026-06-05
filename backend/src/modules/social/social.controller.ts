@@ -48,12 +48,12 @@ const canView = async (post: { id: string; userId: string; privacy: string }, vi
 };
 
 const postInclude = (userId: string) => ({
-  user: { select: { id: true, role: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
+  user: { select: { id: true, role: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
   _count: { select: { likes: true, comments: true } },
   likes: { where: { userId }, take: 1 },
   sharedPost: {
     include: {
-      user: { select: { id: true, role: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
+      user: { select: { id: true, role: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
       _count: { select: { likes: true, comments: true } },
     },
   },
@@ -181,13 +181,13 @@ export const getPost = async (req: AuthRequest, res: Response) => {
     const post = await prisma.post.findUnique({
       where: { id: id(req) },
       include: {
-        user: { select: { id: true, role: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
+        user: { select: { id: true, role: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
         _count: { select: { likes: true, comments: true } },
         ...(req.userId ? { likes: { where: { userId: req.userId }, take: 1 } } : {}),
         comments: {
           orderBy: { createdAt: 'asc' },
           include: {
-            user: { select: { id: true, role: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
+            user: { select: { id: true, role: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
           },
         },
       },
@@ -316,7 +316,7 @@ export const addComment = async (req: AuthRequest, res: Response) => {
     }
     const comment = await prisma.postComment.create({
       data: { postId, userId: req.userId!, content },
-      include: { user: { select: { id: true, role: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
+      include: { user: { select: { id: true, role: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
     });
     if (post.userId !== req.userId) {
       const name = await getUserDisplayName(req.userId!);
@@ -371,7 +371,7 @@ export const getFollowers = async (req: AuthRequest, res: Response) => {
     const userId = (req.params.userId as string) || req.userId!;
     const followers = await prisma.follow.findMany({
       where: { followingId: userId },
-      include: { follower: { select: { id: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
+      include: { follower: { select: { id: true, role: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
       orderBy: { createdAt: 'desc' },
     });
     res.json(followers.map(f => ({ ...f.follower, followedAt: f.createdAt })));
@@ -386,7 +386,7 @@ export const getFollowing = async (req: AuthRequest, res: Response) => {
     const userId = (req.params.userId as string) || req.userId!;
     const following = await prisma.follow.findMany({
       where: { followerId: userId },
-      include: { following: { select: { id: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
+      include: { following: { select: { id: true, role: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
       orderBy: { createdAt: 'desc' },
     });
     res.json(following.map(f => ({ ...f.following, followedAt: f.createdAt })));

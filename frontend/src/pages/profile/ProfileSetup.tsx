@@ -77,6 +77,13 @@ export default function ProfileSetup() {
   const [searchParams] = useSearchParams();
   const { user, setUser } = useAuthStore();
   const editId = searchParams.get('edit');
+
+  useEffect(() => {
+    if (user?.role === 'SOCIAL') {
+      navigate('/social', { replace: true });
+    }
+  }, [user, navigate]);
+
   const isGuardian = user?.role === 'GUARDIAN';
   const fullSteps = ['basic', 'personal', 'marital', 'family', 'islamic', 'requirements', 'photos', 'review'];
   const guardianSteps = ['basic'];

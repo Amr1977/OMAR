@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Pre-commit hook: auto-bump patch version when source files change
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+VERSION_FILE="$ROOT/VERSION"
+
+# Only bump if there are staged changes to source files (not VERSION or package.json)
+staged=$(git diff --cached --name-only --diff-filter=ACM | { grep -c -v -E '^(VERSION|package\.json|scripts/|\.githooks/|\.github/|\.gitignore|README\.md|LICENSE|frontend/src/generated/)' || true; })
+
+if [ "$staged" -gt 0 ]; then
+  current=$(cat "$VERSION_FILE")
+  IFS='.' read -r major minor patch <<< "$current"
+  patch=$((patch + 1))
+  new="$major.$minor.$patch"
+
+  echo "$new" > "$VERSION_FILE"
+
+  # Also update package.json files
+  for pkg in "$ROOT/frontend/package.json" "$ROOT/backend/package.json"; do
+    if [ -f "$pkg" ]; then
+      sed -i "s/\"version\": \".*\"/\"version\": \"$new\"/" "$pkg"
+    fi
+  done
+
+  git add "$VERSION_FILE" "$ROOT/frontend/package.json" "$ROOT/backend/package.json"
+
+  echo "🔖 Bumped version: $current → $new"
+fi

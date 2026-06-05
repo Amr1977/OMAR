@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api, photoUrl } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import ImageViewer from '../../components/ImageViewer';
-
-const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="#D8F3DC" rx="20"/><text x="20" y="26" text-anchor="middle" fill="#1B4332" font-size="16" font-weight="bold">?</text></svg>');
+import UserAvatar from '../../components/UserAvatar';
 
 export default function MyProfile() {
   const { t } = useTranslation();
@@ -257,15 +256,27 @@ export default function MyProfile() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-3">
                   <Link to={`/profile/my`} className="flex items-center gap-3">
-                    <img
-                      src={photoUrl(post.user?.profile?.photos?.[0]?.url) || DEFAULT_AVATAR}
-                      alt=""
-                      className="w-10 h-10 rounded-full object-cover"
+                    <UserAvatar
+                      photo={post.user?.profile?.photos?.[0]?.url}
+                      size="lg"
+                      role={post.user?.role}
+                      subscriptionPlan={post.user?.subscriptionPlan}
                     />
                     <div>
-                      <p className="text-sm font-semibold text-[#1B4332]">
-                        {post.user?.profile?.displayName || post.user?.role || 'مستخدم'}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-[#1B4332]">
+                          {post.user?.profile?.displayName || post.user?.role || 'مستخدم'}
+                        </p>
+                        {post.user?.subscriptionPlan === 'PREMIUM' && (
+                          <span className="text-[10px] bg-[#DAA520]/20 text-[#DAA520] px-1.5 py-0.5 rounded font-medium leading-none">مميز</span>
+                        )}
+                        {post.user?.role === 'GUARDIAN' && post.user?.subscriptionPlan !== 'PREMIUM' && (
+                          <span className="text-[10px] bg-[#2D6A4F]/20 text-[#2D6A4F] px-1.5 py-0.5 rounded font-medium leading-none">ولي</span>
+                        )}
+                        {post.user?.role === 'SOCIAL' && post.user?.subscriptionPlan !== 'PREMIUM' && (
+                          <span className="text-[10px] bg-[#2563EB]/20 text-[#2563EB] px-1.5 py-0.5 rounded font-medium leading-none">اجتماعي</span>
+                        )}
+                      </div>
                       <p className="text-xs text-[#6B7280]">
                         {new Date(post.createdAt).toLocaleDateString('ar-SA')}
                       </p>
@@ -318,7 +329,12 @@ export default function MyProfile() {
                   {post.sharedPost && (
                     <div className="bg-gray-50 rounded-xl border border-[#E5E7EB] p-3 mb-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <img src={photoUrl(post.sharedPost.user?.profile?.photos?.[0]?.url) || DEFAULT_AVATAR} alt="" className="w-5 h-5 rounded-full object-cover" />
+                        <UserAvatar
+                          photo={post.sharedPost.user?.profile?.photos?.[0]?.url}
+                          size="sm"
+                          role={post.sharedPost.user?.role}
+                          subscriptionPlan={post.sharedPost.user?.subscriptionPlan}
+                        />
                         <span className="text-xs font-semibold text-[#1B4332]">{post.sharedPost.user?.profile?.displayName || post.sharedPost.user?.role}</span>
                       </div>
                       <p className="text-xs text-[#374151] leading-relaxed whitespace-pre-wrap">{post.sharedPost.content}</p>

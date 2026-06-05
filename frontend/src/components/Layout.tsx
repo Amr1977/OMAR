@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../stores/themeStore';
 import { api, photoUrl } from '../lib/api';
 import { onNewNotification } from '../lib/socket';
+import UserAvatar from './UserAvatar';
 
 export default function Layout() {
   const { t, i18n } = useTranslation();
@@ -59,8 +60,15 @@ export default function Layout() {
     ...(isAuthenticated && (user?.role === 'GUARDIAN' || user?.role === 'BOTH')
       ? [
           { path: '/browse', label: t('nav.browse') },
+          { path: '/guardian/brides', label: 'العرائس' },
           { path: '/requests/sent', label: t('nav.requests') },
           { path: '/messages', label: t('nav.messages') },
+        ]
+      : []),
+    ...(isAuthenticated && user?.role === 'SOCIAL'
+      ? [
+          { path: '/social', label: 'المنشورات' },
+          { path: '/profile/my', label: t('profile.my') },
         ]
       : []),
     ...(isAuthenticated && user?.role === 'ADMIN'
@@ -152,16 +160,15 @@ export default function Layout() {
                 <div className="flex items-center gap-3">
                   <Link
                     to="/profile/my"
-                    className="w-8 h-8 rounded-full overflow-hidden border-2 border-[var(--color-primary)] hover:opacity-80 transition-opacity shrink-0"
+                    className="shrink-0"
                     title="الملف الشخصي"
                   >
-                    {profilePhoto ? (
-                      <img src={photoUrl(profilePhoto)} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-[var(--color-primary-pale)] flex items-center justify-center text-[var(--color-primary)] text-sm font-bold">
-                        {user?.role?.charAt(0) || '?'}
-                      </div>
-                    )}
+                    <UserAvatar
+                      photo={profilePhoto}
+                      size="md"
+                      role={user?.role}
+                      subscriptionPlan={user?.subscriptionPlan}
+                    />
                   </Link>
                   <Link
                     to="/settings"
@@ -242,14 +249,13 @@ export default function Layout() {
                   onClick={close}
                   className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
                 >
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[var(--color-primary)] shrink-0">
-                    {profilePhoto ? (
-                      <img src={photoUrl(profilePhoto)} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-[var(--color-primary-pale)] flex items-center justify-center text-[var(--color-primary)] text-sm font-bold">
-                        {user?.role?.charAt(0) || '?'}
-                      </div>
-                    )}
+                  <div className="shrink-0">
+                    <UserAvatar
+                      photo={profilePhoto}
+                      size="lg"
+                      role={user?.role}
+                      subscriptionPlan={user?.subscriptionPlan}
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[var(--color-text)] truncate group-hover:text-[var(--color-primary)] transition-colors">
@@ -338,6 +344,14 @@ export default function Layout() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Outlet />
       </main>
+
+      {/* Footer with version */}
+      <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between text-xs text-[var(--color-muted)]">
+          <span>© {new Date().getFullYear()} {t('app.name')}</span>
+          <span className="font-mono" dir="ltr">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+        </div>
+      </footer>
     </div>
   );
 }

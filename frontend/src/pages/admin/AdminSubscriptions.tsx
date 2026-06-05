@@ -80,7 +80,7 @@ export default function AdminSubscriptions() {
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.user?.email || s.user?.phone || s.user?.id?.slice(0, 8)}</td>
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.durationMonths || 1} شهر</td>
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.amount} EGP</td>
-                  <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.paymentMethod === 'INSTAPAY' ? 'إنستاباي' : 'فودافون كاش'}</td>
+                  <td className="p-3 text-[#1B4332] dark:text-gray-100">{s.paymentMethod === 'INSTAPAY' ? 'إنستاباي' : s.paymentMethod === 'VODAFONE_CASH' ? 'فودافون كاش' : 'USDT TRC20'}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badge(s.status)}`}>{s.status}</span></td>
                   <td className="p-3">
                     {s.transactionImage ? (

@@ -8,6 +8,7 @@ import { api, setToken } from '../../lib/api';
 import { signInWithGoogle } from '../../lib/googleAuth';
 
 const roles = [
+  { value: 'SOCIAL', label: 'تواصل اجتماعي', desc: 'أركز على المنشورات', icon: '🌐' },
   { value: 'GROOM', label: 'راغب في الزواج', desc: 'أبحث عن زوجة', icon: '👤' },
   { value: 'GUARDIAN', label: 'ولي أمر', desc: 'أبحث عن زوج لمن أرعاه', icon: '👪' },
   { value: 'BOTH', label: 'الاثنين معاً', desc: 'أبحث عن زوجة ولدي من أرعاه', icon: '🤝' },
@@ -44,7 +45,7 @@ export default function Register() {
       localStorage.setItem('auth_token', result.accessToken);
       const user = await api.auth.getMe();
       login(result.accessToken, user);
-      navigate('/profile/setup');
+      navigate(form.role === 'SOCIAL' ? '/social' : '/profile/setup');
     } catch (err: any) {
       const msg = err.code === 'auth/email-already-in-use'
         ? 'هذا البريد مسجل بالفعل'
@@ -62,7 +63,7 @@ export default function Register() {
     setError('');
     try {
       await signInWithGoogle(form.role);
-      navigate('/profile/setup');
+      navigate(form.role === 'SOCIAL' ? '/social' : '/profile/setup');
     } catch (err: any) {
       setError(err.message || 'فشل التسجيل عبر Google');
     } finally {
@@ -131,7 +132,7 @@ export default function Register() {
             {/* Role selector */}
             <div>
               <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2.5">أنا ...</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {roles.map((r) => (
                   <button key={r.value} type="button" onClick={() => setForm({ ...form, role: r.value })}
                     className={`p-3 rounded-xl border-2 text-center transition-all duration-200 ${

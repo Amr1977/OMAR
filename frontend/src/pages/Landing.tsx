@@ -48,7 +48,7 @@ export default function Landing() {
   ) : null;
 
   if (isAuthenticated && user) {
-    const dashboardLink = user.role === 'GROOM' ? '/profile/my' : '/browse';
+    const dashboardLink = user.role === 'SOCIAL' ? '/social' : user.role === 'GROOM' ? '/profile/my' : '/browse';
     return (
       <div className="text-center py-16">
         <h1 className="text-4xl font-bold text-[#1B4332] dark:text-[#DAA520] mb-4">
@@ -59,7 +59,7 @@ export default function Landing() {
           to={dashboardLink}
           className="inline-block px-8 py-3 bg-[#1B4332] text-white rounded-lg text-lg font-medium hover:bg-[#2D6A4F]"
         >
-          {user.role === 'GROOM' ? t('profile.my') : t('browse.title')}
+          {user.role === 'SOCIAL' ? 'المنشورات' : user.role === 'GROOM' ? t('profile.my') : t('browse.title')}
         </Link>
 
           <TestimonialsSection />
@@ -96,15 +96,32 @@ export default function Landing() {
               </div>
               <h2 className="text-2xl font-bold text-[#F5E6B8] mb-3 text-center">ادعم مشروع حفصة</h2>
               <p className="text-base text-[#B8DFC8] leading-relaxed max-w-2xl mx-auto mb-6 text-center">
-                تبرعاتكم تساعد في تطوير المنصة وتغطية تكاليف الاستضافة والخدمات. يمكنكم التبرع عبر إنستاباي أو فودافون كاش.
+                تبرعاتكم تساعد في تطوير المنصة وتغطية تكاليف الاستضافة والخدمات. يمكنكم التبرع عبر إنستاباي أو فودافون كاش أو USDT (TRC20).
               </p>
               <div className="bg-[#1B4332]/50 dark:bg-gray-700/50 rounded-lg p-4 mb-6 text-center max-w-sm mx-auto">
-                <p className="text-[#DAA520] text-sm font-medium mb-1">رقم الدفع</p>
+                <p className="text-[#DAA520] text-sm font-medium mb-1">رقم الدفع / المحفظة</p>
                 <p className="text-white text-xl font-bold tracking-wider">01094450141</p>
                 <p className="text-[#B8DFC8] text-sm">Amr Lotfy</p>
                 <div className="flex items-center justify-center gap-3 mt-2">
                   <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">إنستاباي</span>
                   <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">فودافون كاش</span>
+                  <span className="px-3 py-0.5 bg-[#2563EB]/20 text-[#2563EB] rounded-full text-xs font-bold">USDT TRC20</span>
+                </div>
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <p className="text-[#B8DFC8] text-xs mb-1">USDT (TRC20)</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <p className="text-white text-xs font-mono truncate max-w-[200px]">TGokJ43uzZvxwMAAsPaAtFmakZ1iQr4WTS</p>
+                    <button
+                      onClick={() => navigator.clipboard.writeText('TGokJ43uzZvxwMAAsPaAtFmakZ1iQr4WTS')}
+                      className="p-1 rounded hover:bg-white/10 transition-colors"
+                      title="نسخ"
+                    >
+                      <svg className="w-3.5 h-3.5 text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-amber-400/70 mt-0.5">⚠ يجب استخدام شبكة TRC20</p>
                 </div>
               </div>
               <div className="text-center">
@@ -250,15 +267,32 @@ export default function Landing() {
           </div>
           <h2 className="text-2xl font-bold text-[#F5E6B8] mb-3 text-center">ادعم مشروع حفصة</h2>
           <p className="text-base text-[#B8DFC8] leading-relaxed max-w-2xl mx-auto mb-6 text-center">
-            تبرعاتكم تساعد في تطوير المنصة وتغطية تكاليف الاستضافة والخدمات. يمكنكم التبرع عبر إنستاباي أو فودافون كاش.
+            تبرعاتكم تساعد في تطوير المنصة وتغطية تكاليف الاستضافة والخدمات. يمكنكم التبرع عبر إنستاباي أو فودافون كاش أو USDT (TRC20).
           </p>
           <div className="bg-[#1B4332]/50 dark:bg-gray-700/50 rounded-lg p-4 mb-6 text-center max-w-sm mx-auto">
-            <p className="text-[#DAA520] text-sm font-medium mb-1">رقم الدفع</p>
+            <p className="text-[#DAA520] text-sm font-medium mb-1">رقم الدفع / المحفظة</p>
             <p className="text-white text-xl font-bold tracking-wider">01094450141</p>
             <p className="text-[#B8DFC8] text-sm">Amr Lotfy</p>
             <div className="flex items-center justify-center gap-3 mt-2">
               <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">إنستاباي</span>
               <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">فودافون كاش</span>
+              <span className="px-3 py-0.5 bg-[#2563EB]/20 text-[#2563EB] rounded-full text-xs font-bold">USDT TRC20</span>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <p className="text-[#B8DFC8] text-xs mb-1">USDT (TRC20)</p>
+              <div className="flex items-center justify-center gap-1">
+                <p className="text-white text-xs font-mono truncate max-w-[200px]">TGokJ43uzZvxwMAAsPaAtFmakZ1iQr4WTS</p>
+                <button
+                  onClick={() => navigator.clipboard.writeText('TGokJ43uzZvxwMAAsPaAtFmakZ1iQr4WTS')}
+                  className="p-1 rounded hover:bg-white/10 transition-colors"
+                  title="نسخ"
+                >
+                  <svg className="w-3.5 h-3.5 text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-[10px] text-amber-400/70 mt-0.5">⚠ يجب استخدام شبكة TRC20</p>
             </div>
           </div>
           <div className="text-center">

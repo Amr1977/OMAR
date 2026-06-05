@@ -1,7 +1,5 @@
 /// <reference types="vite/client" />
-declare module 'firebase/app';
-declare module 'firebase/auth';
-declare module 'firebase/firestore';
-declare module 'firebase/storage';
-declare module 'firebase/analytics';
-declare module 'firebase/messaging';
+
+declare const __APP_VERSION__: string;
+declare const __APP_COMMIT__: string;
+declare const __APP_DATE__: string;

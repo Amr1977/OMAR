@@ -206,4 +206,13 @@ export const api = {
   donations: {
     create: (data: any) => api.post('/donations', data),
   },
+
+  // Brides
+  brides: {
+    create: (data: any) => api.post('/brides', data),
+    list: () => api.get('/brides'),
+    get: (id: string) => api.get(`/brides/${id}`),
+    update: (id: string, data: any) => api.put(`/brides/${id}`, data),
+    delete: (id: string) => api.delete(`/brides/${id}`),
+  },
 };

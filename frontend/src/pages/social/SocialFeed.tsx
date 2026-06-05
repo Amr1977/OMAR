@@ -2,10 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
-import { photoUrl } from '../../lib/api';
 import ImageViewer from '../../components/ImageViewer';
-
-const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="#D8F3DC" rx="20"/><text x="20" y="26" text-anchor="middle" fill="#1B4332" font-size="16" font-weight="bold">?</text></svg>');
+import UserAvatar from '../../components/UserAvatar';
 
 export default function SocialFeed() {
   const { t } = useTranslation();
@@ -44,16 +42,20 @@ export default function SocialFeed() {
   const uploadingCount = mediaPreviews.filter(m => m.uploading).length;
   const canPublish = (newPost.trim() || mediaUrls.length > 0) && !submitting && uploadingCount === 0;
 
-  const fetchPosts = () => {
+  const fetchPosts = (append = false, pageNum?: number) => {
+    const p = pageNum ?? page;
     setLoading(true);
-    const fetcher = tab === 'feed' ? api.social.getFeed(`page=${page}&limit=20`) : api.social.getExplore(`page=${page}&limit=20`);
+    const fetcher = tab === 'feed' ? api.social.getFeed(`page=${p}&limit=20`) : api.social.getExplore(`page=${p}&limit=20`);
     fetcher.then((res: any) => {
-      setPosts(res.posts);
+      setPosts(prev => append ? [...prev, ...res.posts] : res.posts);
       setTotalPages(res.totalPages);
     }).catch(() => {}).finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchPosts(); }, [tab, page]);
+  useEffect(() => {
+    if (page > 1) fetchPosts(true);
+    else fetchPosts();
+  }, [tab, page]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -107,7 +109,7 @@ export default function SocialFeed() {
       setMediaPreviews([]);
       setUploadError('');
       setPage(1);
-      fetchPosts();
+      if (page === 1) fetchPosts(false, 1);
     } catch (e) {} finally { setSubmitting(false); }
   };
 
@@ -203,7 +205,6 @@ export default function SocialFeed() {
   };
 
   const userName = (p: any) => p.user.profile?.displayName || p.user.role;
-  const avatar = (p: any) => photoUrl(p.user.profile?.photos?.[0]?.url) || DEFAULT_AVATAR;
 
   const isVideo = (url: string) => url.startsWith('data:video/');
 
@@ -293,13 +294,33 @@ export default function SocialFeed() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <div key={post.id} className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+            <div key={post.id} className={`bg-[var(--color-surface)] rounded-xl border p-4 ${
+              post.user.subscriptionPlan === 'PREMIUM'
+                ? 'border-[#DAA520]/40 shadow-[0_0_12px_rgba(218,165,32,0.08)]'
+                : 'border-[var(--color-border)]'
+            }`}>
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
                 <Link to={`/profile/my`} className="flex items-center gap-3">
-                  <img src={avatar(post)} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  <UserAvatar
+                    photo={post.user.profile?.photos?.[0]?.url}
+                    size="lg"
+                    role={post.user.role}
+                    subscriptionPlan={post.user.subscriptionPlan}
+                  />
                   <div>
-                    <p className="text-sm font-semibold text-[var(--color-primary)]">{userName(post)}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-semibold text-[var(--color-primary)]">{userName(post)}</p>
+                      {post.user.subscriptionPlan === 'PREMIUM' && (
+                        <span className="text-[10px] bg-[#DAA520]/20 text-[#DAA520] px-1.5 py-0.5 rounded font-medium leading-none">مميز</span>
+                      )}
+                      {post.user.role === 'GUARDIAN' && post.user.subscriptionPlan !== 'PREMIUM' && (
+                        <span className="text-[10px] bg-[#2D6A4F]/20 text-[#2D6A4F] px-1.5 py-0.5 rounded font-medium leading-none">ولي</span>
+                      )}
+                      {post.user.role === 'SOCIAL' && post.user.subscriptionPlan !== 'PREMIUM' && (
+                        <span className="text-[10px] bg-[#2563EB]/20 text-[#2563EB] px-1.5 py-0.5 rounded font-medium leading-none">اجتماعي</span>
+                      )}
+                    </div>
                     <p className="text-xs text-[var(--color-muted)]">{new Date(post.createdAt).toLocaleDateString('ar-SA')}</p>
                   </div>
                 </Link>
@@ -408,7 +429,12 @@ export default function SocialFeed() {
                   <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-3 mb-3" onClick={(e) => e.preventDefault()}>
                     <Link to={`/social/post/${post.sharedPost.id}`} className="block">
                       <div className="flex items-center gap-2 mb-2">
-                        <img src={photoUrl(post.sharedPost.user?.profile?.photos?.[0]?.url) || DEFAULT_AVATAR} alt="" className="w-5 h-5 rounded-full object-cover" />
+                        <UserAvatar
+                          photo={post.sharedPost.user?.profile?.photos?.[0]?.url}
+                          size="sm"
+                          role={post.sharedPost.user?.role}
+                          subscriptionPlan={post.sharedPost.user?.subscriptionPlan}
+                        />
                         <span className="text-xs font-semibold text-[var(--color-primary)]">{post.sharedPost.user?.profile?.displayName || post.sharedPost.user?.role}</span>
                       </div>
                       <p className="text-xs text-[var(--color-text)] leading-relaxed whitespace-pre-wrap">{post.sharedPost.content}</p>
@@ -490,12 +516,15 @@ export default function SocialFeed() {
             </div>
           ))}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 text-sm border border-[var(--color-border)] rounded-lg disabled:opacity-50">السابق</button>
-              <span className="px-4 py-2 text-sm text-[var(--color-muted)]">{page} / {totalPages}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-2 text-sm border border-[var(--color-border)] rounded-lg disabled:opacity-50">التالي</button>
+          {/* Load more */}
+          {page < totalPages && (
+            <div className="text-center mt-6">
+              <button
+                onClick={() => setPage(p => p + 1)}
+                className="px-8 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all"
+              >
+                عرض المزيد
+              </button>
             </div>
           )}
         </div>

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Post-checkout hook — no-op (version handled by Vite define from VERSION file)
+exit 0

@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, photoUrl } from '../../lib/api';
+import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import ImageViewer from '../../components/ImageViewer';
-
-const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="#D8F3DC" rx="20"/><text x="20" y="26" text-anchor="middle" fill="#1B4332" font-size="16" font-weight="bold">?</text></svg>');
+import UserAvatar from '../../components/UserAvatar';
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
@@ -134,7 +133,6 @@ export default function PostDetail() {
     } catch (e) {} finally { setSharingSubmitting(false); }
   };
 
-  const avatar = (p: any) => photoUrl(p.user?.profile?.photos?.[0]?.url) || DEFAULT_AVATAR;
   const userName = (p: any) => p.user?.profile?.displayName || p.user?.role || t('social.anonymous');
 
   if (loading) return <div className="text-center py-8 text-[var(--color-muted)]">{t('common.loading')}</div>;
@@ -147,9 +145,25 @@ export default function PostDetail() {
         <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <Link to="/profile/my" className="flex items-center gap-3">
-              <img src={avatar(post)} alt="" className="w-10 h-10 rounded-full object-cover" />
+              <UserAvatar
+                photo={post.user?.profile?.photos?.[0]?.url}
+                size="lg"
+                role={post.user?.role}
+                subscriptionPlan={post.user?.subscriptionPlan}
+              />
               <div>
-                <p className="text-sm font-semibold text-[var(--color-primary)]">{userName(post)}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-semibold text-[var(--color-primary)]">{userName(post)}</p>
+                  {post.user?.subscriptionPlan === 'PREMIUM' && (
+                    <span className="text-[10px] bg-[#DAA520]/20 text-[#DAA520] px-1.5 py-0.5 rounded font-medium leading-none">مميز</span>
+                  )}
+                  {post.user?.role === 'GUARDIAN' && post.user?.subscriptionPlan !== 'PREMIUM' && (
+                    <span className="text-[10px] bg-[#2D6A4F]/20 text-[#2D6A4F] px-1.5 py-0.5 rounded font-medium leading-none">ولي</span>
+                  )}
+                  {post.user?.role === 'SOCIAL' && post.user?.subscriptionPlan !== 'PREMIUM' && (
+                    <span className="text-[10px] bg-[#2563EB]/20 text-[#2563EB] px-1.5 py-0.5 rounded font-medium leading-none">اجتماعي</span>
+                  )}
+                </div>
                 <p className="text-xs text-[var(--color-muted)]">{new Date(post.createdAt).toLocaleDateString('ar-SA')}</p>
               </div>
             </Link>
@@ -242,7 +256,12 @@ export default function PostDetail() {
                 <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
                   <Link to={`/social/post/${post.sharedPost.id}`} className="block">
                     <div className="flex items-center gap-2 mb-2">
-                      <img src={avatar(post.sharedPost)} alt="" className="w-6 h-6 rounded-full object-cover" />
+                      <UserAvatar
+                        photo={post.sharedPost.user?.profile?.photos?.[0]?.url}
+                        size="sm"
+                        role={post.sharedPost.user?.role}
+                        subscriptionPlan={post.sharedPost.user?.subscriptionPlan}
+                      />
                       <span className="text-sm font-semibold text-[var(--color-primary)]">{userName(post.sharedPost)}</span>
                     </div>
                     <p className="text-sm text-[var(--color-text)] leading-relaxed whitespace-pre-wrap">{post.sharedPost.content}</p>
@@ -347,7 +366,12 @@ export default function PostDetail() {
           <div className="space-y-4">
             {post.comments.map((comment: any) => (
               <div key={comment.id} className="flex gap-3">
-                <img src={avatar(comment)} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                <UserAvatar
+                  photo={comment.user?.profile?.photos?.[0]?.url}
+                  size="sm"
+                  role={comment.user?.role}
+                  subscriptionPlan={comment.user?.subscriptionPlan}
+                />
                 <div className="flex-1">
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                     <p className="text-sm font-semibold text-[var(--color-primary)]">{userName(comment)}</p>

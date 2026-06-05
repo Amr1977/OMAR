@@ -21,6 +21,7 @@ import socialRoutes from './modules/social/social.routes';
 import feedbackRoutes from './modules/feedback/feedback.routes';
 import subscriptionRoutes from './modules/subscriptions/subscriptions.routes';
 import donationRoutes from './modules/donations/donations.routes';
+import brideRoutes from './modules/brides/brides.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -54,6 +55,7 @@ app.use('/api/social', socialRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/donations', donationRoutes);
+app.use('/api/brides', brideRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'NOT_FOUND', message: 'Route not found' });

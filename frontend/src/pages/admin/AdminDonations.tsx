@@ -78,7 +78,7 @@ export default function AdminDonations() {
                 <tr key={d.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{d.user?.email || d.user?.phone || d.user?.id?.slice(0, 8) || 'زائر'}</td>
                   <td className="p-3 text-[#1B4332] dark:text-gray-100">{d.amount} EGP</td>
-                  <td className="p-3 text-[#1B4332] dark:text-gray-100">{d.paymentMethod === 'INSTAPAY' ? 'إنستاباي' : 'فودافون كاش'}</td>
+                  <td className="p-3 text-[#1B4332] dark:text-gray-100">{d.paymentMethod === 'INSTAPAY' ? 'إنستاباي' : d.paymentMethod === 'VODAFONE_CASH' ? 'فودافون كاش' : 'USDT TRC20'}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badge(d.status)}`}>{d.status}</span></td>
                   <td className="p-3">
                     {d.transactionImage ? (

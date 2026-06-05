@@ -32,6 +32,8 @@ import AdminSubscriptions from './pages/admin/AdminSubscriptions';
 import AdminDonations from './pages/admin/AdminDonations';
 import Feedback from './pages/Feedback';
 import Donate from './pages/Donate';
+import BrideList from './pages/guardian/BrideList';
+import BrideForm from './pages/guardian/BrideForm';
 
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { isAuthenticated, isLoading, user } = useAuthStore();
@@ -101,6 +103,9 @@ export default function App() {
         <Route path="admin/subscriptions" element={<ProtectedRoute roles={['ADMIN']}><AdminSubscriptions /></ProtectedRoute>} />
         <Route path="admin/donations" element={<ProtectedRoute roles={['ADMIN']}><AdminDonations /></ProtectedRoute>} />
         <Route path="donate" element={<ProtectedRoute><Donate /></ProtectedRoute>} />
+        <Route path="guardian/brides" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><BrideList /></ProtectedRoute>} />
+        <Route path="guardian/brides/new" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><BrideForm /></ProtectedRoute>} />
+        <Route path="guardian/brides/:id/edit" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><BrideForm /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

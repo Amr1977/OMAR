@@ -25,6 +25,7 @@
     "role_groom": "راغب في الزواج",
     "role_guardian": "ولي أمر",
     "role_both": "كلاهما",
+    "role_social": "تواصل اجتماعي",
     "role": "الدور",
     "verifyOtp": "تأكيد رمز التحقق",
     "sendOtp": "إرسال رمز التحقق"
@@ -283,7 +284,8 @@
     "submit": "تأكيد الاشتراك",
     "success": "تم إرسال طلب الاشتراك",
     "instapay": "إنستاباي",
-    "vodafoneCash": "فودافون كاش"
+    "vodafoneCash": "فودافون كاش",
+    "usdtTrc20": "USDT TRC20"
   },
   "donation": {
     "title": "تبرع",
@@ -293,6 +295,7 @@
     "submit": "تبرع",
     "success": "تم إرسال التبرع",
     "instapay": "إنستاباي",
-    "vodafoneCash": "فودافون كاش"
+    "vodafoneCash": "فودافون كاش",
+    "usdtTrc20": "USDT TRC20"
   }
 }

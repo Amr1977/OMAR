@@ -11,6 +11,7 @@ enum UserRole {
   GROOM
   GUARDIAN
   BOTH
+  SOCIAL
   ADMIN
 }
 
@@ -108,6 +109,7 @@ model User {
   feedback          Feedback[]
   subscriptions     Subscription[]
   donations         Donation[]
+  brides            Bride[]
 }
 
 model PushToken {
@@ -392,6 +394,7 @@ model Feedback {
 enum PaymentMethod {
   INSTAPAY
   VODAFONE_CASH
+  USDT_TRC20
 }
 
 enum PaymentStatus {
@@ -434,4 +437,74 @@ model Donation {
   updatedAt        DateTime      @updatedAt
 
   @@index([status])
+}
+
+model Bride {
+  id                    String   @id @default(cuid())
+  guardianId            String
+  guardian              User     @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+
+  age                   Int
+  dateOfBirth           String?
+  weight                Int?
+  height                Int?
+  skinColor             String?
+  healthIssues          String?
+
+  education             String?
+  educationName         String?
+  occupation            String?
+  workType              String?
+  leaveWorkAfterMarriage String?
+  incomeLevel           String?
+
+  maritalStatus         String
+  previousRelationship  String?
+  previousMarriageCount Int?
+  lastDivorceDate       String?
+  husbandDeathDate      String?
+  marriageCount         Int?
+  childrenBoys          Int?
+  childrenGirls         Int?
+  childrenAges          String?
+  custodyAfterMarriage  String?
+  acceptPolygamy        String?
+  wantChildren          String?
+
+  fatherOccupation      String?
+  motherOccupation      String?
+  siblingsCount         Int?
+  siblingsEducation     String?
+
+  originGovernorate     String?
+  residenceGovernorate  String?
+  area                  String?
+  areaType              String?
+
+  prayerCommitment      String?
+  hijabType             String?
+  acceptNiqab           String?
+  acceptTravel          String?
+  formSubmitter         String?
+
+  preferredAgeMin       Int?
+  preferredAgeMax       Int?
+  preferredSkinColor    String?
+  preferredMaritalStatus String?
+  acceptDivorcedWithChildren String?
+  acceptDivorcedChildrenCustody String?
+  acceptOtherGovernorate String?
+  preferredEducation    String?
+  preferredGeneralSpecs String?
+
+  groomProvideApartment String?
+  publishConsent        String?
+  previousContact       String?
+  notes                 String?
+
+  status                String   @default("ACTIVE")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([guardianId])
 }
