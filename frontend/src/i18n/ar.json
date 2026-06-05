@@ -268,5 +268,31 @@
     "month": "شهر",
     "yes": "نعم",
     "no": "لا"
+  },
+  "subscription": {
+    "title": "الاشتراك",
+    "current": "اشتراكي",
+    "pending": "قيد المراجعة",
+    "verified": "مفعل",
+    "declined": "مرفوض",
+    "free": "مجاني",
+    "premium": "مميز",
+    "price": "50 EGP / شهر",
+    "uploadProof": "رفع صورة التحويل",
+    "note": "ملاحظة",
+    "submit": "تأكيد الاشتراك",
+    "success": "تم إرسال طلب الاشتراك",
+    "instapay": "إنستاباي",
+    "vodafoneCash": "فودافون كاش"
+  },
+  "donation": {
+    "title": "تبرع",
+    "amount": "المبلغ",
+    "uploadProof": "رفع صورة التحويل",
+    "note": "ملاحظة",
+    "submit": "تبرع",
+    "success": "تم إرسال التبرع",
+    "instapay": "إنستاباي",
+    "vodafoneCash": "فودافون كاش"
   }
 }

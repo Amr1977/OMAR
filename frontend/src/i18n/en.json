@@ -268,5 +268,31 @@
     "month": "month",
     "yes": "Yes",
     "no": "No"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "current": "My Subscription",
+    "pending": "Pending Review",
+    "verified": "Active",
+    "declined": "Declined",
+    "free": "Free",
+    "premium": "Premium",
+    "price": "50 EGP / month",
+    "uploadProof": "Upload transaction image",
+    "note": "Note",
+    "submit": "Confirm Subscription",
+    "success": "Subscription request submitted",
+    "instapay": "Instapay",
+    "vodafoneCash": "Vodafone Cash"
+  },
+  "donation": {
+    "title": "Donate",
+    "amount": "Amount",
+    "uploadProof": "Upload transaction image",
+    "note": "Note",
+    "submit": "Donate",
+    "success": "Donation submitted",
+    "instapay": "Instapay",
+    "vodafoneCash": "Vodafone Cash"
   }
 }

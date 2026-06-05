@@ -23,6 +23,16 @@ import {
   rejectFeedback,
   deleteFeedback,
 } from '../feedback/feedback.controller';
+import {
+  listSubscriptions,
+  verifySubscription,
+  declineSubscription,
+} from '../subscriptions/subscriptions.controller';
+import {
+  listDonations,
+  verifyDonation,
+  declineDonation,
+} from '../donations/donations.controller';
 
 const router = Router();
 
@@ -47,5 +57,11 @@ router.get('/feedback', listFeedback);
 router.put('/feedback/:id/approve', approveFeedback);
 router.put('/feedback/:id/reject', rejectFeedback);
 router.delete('/feedback/:id', deleteFeedback);
+router.get('/subscriptions', listSubscriptions);
+router.put('/subscriptions/:id/verify', verifySubscription);
+router.put('/subscriptions/:id/decline', declineSubscription);
+router.get('/donations', listDonations);
+router.put('/donations/:id/verify', verifyDonation);
+router.put('/donations/:id/decline', declineDonation);
 
 export default router;

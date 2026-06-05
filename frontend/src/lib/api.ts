@@ -182,11 +182,28 @@ export const api = {
     approveFeedback: (id: string) => api.put(`/admin/feedback/${id}/approve`),
     rejectFeedback: (id: string) => api.put(`/admin/feedback/${id}/reject`),
     deleteFeedback: (id: string) => api.delete(`/admin/feedback/${id}`),
+    subscriptions: () => api.get('/admin/subscriptions'),
+    verifySubscription: (id: string) => api.put(`/admin/subscriptions/${id}/verify`),
+    declineSubscription: (id: string, adminNote?: string) => api.put(`/admin/subscriptions/${id}/decline`, { adminNote }),
+    donations: () => api.get('/admin/donations'),
+    verifyDonation: (id: string) => api.put(`/admin/donations/${id}/verify`),
+    declineDonation: (id: string, adminNote?: string) => api.put(`/admin/donations/${id}/decline`, { adminNote }),
   },
 
   // Feedback
   feedback: {
     submit: (data: any) => api.post('/feedback', data),
     testimonials: () => api.get('/feedback/testimonials'),
+  },
+
+  // Subscriptions
+  subscriptions: {
+    create: (data: any) => api.post('/subscriptions', data),
+    getMy: () => api.get('/subscriptions/my'),
+  },
+
+  // Donations
+  donations: {
+    create: (data: any) => api.post('/donations', data),
   },
 };

@@ -106,6 +106,8 @@ model User {
   following         Follow[]         @relation("Following")
   pushTokens        PushToken[]
   feedback          Feedback[]
+  subscriptions     Subscription[]
+  donations         Donation[]
 }
 
 model PushToken {
@@ -385,4 +387,50 @@ model Feedback {
   status    FeedbackStatus @default(PENDING)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+}
+
+enum PaymentMethod {
+  INSTAPAY
+  VODAFONE_CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  DECLINED
+}
+
+model Subscription {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount           Float         @default(50)
+  paymentMethod    PaymentMethod
+  transactionImage String?       @db.Text
+  note             String?       @db.Text
+  status           PaymentStatus @default(PENDING)
+  adminNote        String?       @db.Text
+  startDate        DateTime?
+  endDate          DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Donation {
+  id               String        @id @default(cuid())
+  userId           String?
+  user             User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  amount           Float
+  paymentMethod    PaymentMethod
+  transactionImage String?       @db.Text
+  note             String?       @db.Text
+  status           PaymentStatus @default(PENDING)
+  adminNote        String?       @db.Text
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
 }

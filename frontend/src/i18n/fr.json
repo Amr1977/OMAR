@@ -268,5 +268,31 @@
     "month": "mois",
     "yes": "Oui",
     "no": "Non"
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "current": "Mon abonnement",
+    "pending": "En attente",
+    "verified": "Actif",
+    "declined": "Refusé",
+    "free": "Gratuit",
+    "premium": "Premium",
+    "price": "50 EGP / mois",
+    "uploadProof": "Télécharger une capture de virement",
+    "note": "Note",
+    "submit": "Confirmer l'abonnement",
+    "success": "Demande d'abonnement envoyée",
+    "instapay": "Instapay",
+    "vodafoneCash": "Vodafone Cash"
+  },
+  "donation": {
+    "title": "Don",
+    "amount": "Montant",
+    "uploadProof": "Télécharger une capture de virement",
+    "note": "Note",
+    "submit": "Faire un don",
+    "success": "Don envoyé",
+    "instapay": "Instapay",
+    "vodafoneCash": "Vodafone Cash"
   }
 }

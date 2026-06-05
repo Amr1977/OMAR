@@ -86,6 +86,41 @@ export default function Landing() {
             </Link>
           </div>
 
+          {/* ─── Donation section (authenticated) ─── */}
+          <div className="max-w-5xl mx-auto mt-16 px-4" dir="rtl">
+            <div className="bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 md:p-10 shadow-lg border border-[#DAA520]/20">
+              <div className="flex justify-center mb-5">
+                <svg className="w-12 h-12 text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-[#F5E6B8] mb-3 text-center">ادعم مشروع حفصة</h2>
+              <p className="text-base text-[#B8DFC8] leading-relaxed max-w-2xl mx-auto mb-6 text-center">
+                تبرعاتكم تساعد في تطوير المنصة وتغطية تكاليف الاستضافة والخدمات. يمكنكم التبرع عبر إنستاباي أو فودافون كاش.
+              </p>
+              <div className="bg-[#1B4332]/50 dark:bg-gray-700/50 rounded-lg p-4 mb-6 text-center max-w-sm mx-auto">
+                <p className="text-[#DAA520] text-sm font-medium mb-1">رقم الدفع</p>
+                <p className="text-white text-xl font-bold tracking-wider">01094450141</p>
+                <p className="text-[#B8DFC8] text-sm">Amr Lotfy</p>
+                <div className="flex items-center justify-center gap-3 mt-2">
+                  <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">إنستاباي</span>
+                  <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">فودافون كاش</span>
+                </div>
+              </div>
+              <div className="text-center">
+                <Link
+                  to="/donate"
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-[#DAA520] text-[#1B4332] rounded-xl font-bold hover:bg-[#F5E6B8] transition-colors shadow-md"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  تبرع الآن
+                </Link>
+              </div>
+            </div>
+          </div>
+
           {/* ─── Open source contribution section (authenticated) ─── */}
           <div className="max-w-5xl mx-auto mt-16 px-4" dir="rtl">
             <div className="bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 md:p-10 text-center shadow-lg border border-[#DAA520]/20">
@@ -203,6 +238,41 @@ export default function Landing() {
             <span className="text-[#DAA520] font-medium text-sm">← اقرأ القصة كاملة</span>
           </div>
         </Link>
+      </div>
+
+      {/* ─── Donation section (unauthenticated) ─── */}
+      <div className="max-w-5xl mx-auto mt-16 px-4" dir="rtl">
+        <div className="bg-gradient-to-br from-[#1B4332] to-[#2D6A4F] dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 md:p-10 shadow-lg border border-[#DAA520]/20">
+          <div className="flex justify-center mb-5">
+            <svg className="w-12 h-12 text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#F5E6B8] mb-3 text-center">ادعم مشروع حفصة</h2>
+          <p className="text-base text-[#B8DFC8] leading-relaxed max-w-2xl mx-auto mb-6 text-center">
+            تبرعاتكم تساعد في تطوير المنصة وتغطية تكاليف الاستضافة والخدمات. يمكنكم التبرع عبر إنستاباي أو فودافون كاش.
+          </p>
+          <div className="bg-[#1B4332]/50 dark:bg-gray-700/50 rounded-lg p-4 mb-6 text-center max-w-sm mx-auto">
+            <p className="text-[#DAA520] text-sm font-medium mb-1">رقم الدفع</p>
+            <p className="text-white text-xl font-bold tracking-wider">01094450141</p>
+            <p className="text-[#B8DFC8] text-sm">Amr Lotfy</p>
+            <div className="flex items-center justify-center gap-3 mt-2">
+              <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">إنستاباي</span>
+              <span className="px-3 py-0.5 bg-[#DAA520]/20 text-[#DAA520] rounded-full text-xs font-bold">فودافون كاش</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[#DAA520] text-[#1B4332] rounded-xl font-bold hover:bg-[#F5E6B8] transition-colors shadow-md"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              تبرع الآن
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* ─── Open source contribution section (unauthenticated) ─── */}

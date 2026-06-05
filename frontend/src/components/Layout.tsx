@@ -72,10 +72,16 @@ export default function Layout() {
           { path: '/admin/messages', label: 'المحادثات' },
           { path: '/admin/reports', label: 'التقارير' },
           { path: '/admin/feedback', label: 'الملاحظات' },
+          { path: '/admin/subscriptions', label: 'الاشتراكات' },
+          { path: '/admin/donations', label: 'التبرعات' },
         ]
       : []),
     ...(isAuthenticated
-      ? [{ path: '/feedback', label: 'تواصل معنا' }]
+      ? [
+          { path: '/settings/subscription', label: 'الاشتراك' },
+          { path: '/donate', label: 'تبرع' },
+          { path: '/feedback', label: 'تواصل معنا' },
+        ]
       : []),
   ];
 
