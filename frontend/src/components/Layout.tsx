@@ -69,20 +69,6 @@ export default function Layout() {
           ] : []),
         ]
       : []),
-    ...(isAuthenticated && user?.roles?.includes('ADMIN')
-      ? [
-          { path: '/admin', label: 'لوحة التحكم' },
-          { path: '/admin/users', label: 'المستخدمين' },
-          { path: '/admin/profiles', label: 'الملفات' },
-          { path: '/admin/posts', label: 'المنشورات' },
-          { path: '/admin/messages', label: 'المحادثات' },
-          { path: '/admin/reports', label: 'التقارير' },
-          { path: '/admin/feedback', label: 'الملاحظات' },
-          { path: '/admin/subscriptions', label: 'الاشتراكات' },
-          { path: '/admin/donations', label: 'التبرعات' },
-          { path: '/admin/eshops', label: 'المتاجر' },
-        ]
-      : []),
     ...(isAuthenticated
       ? [
           { path: '/settings/subscription', label: 'الاشتراك' },
@@ -105,21 +91,6 @@ export default function Layout() {
               <Link to="/" className="text-2xl font-bold text-[var(--color-primary)] font-display">
                 {t('app.name')}
               </Link>
-              <div className="hidden md:flex items-center gap-6">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className={`text-sm font-medium transition-colors ${
-                      isActive(link.path)
-                        ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]'
-                        : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
             </div>
 
             <div className="flex items-center gap-4">
@@ -203,7 +174,7 @@ export default function Layout() {
               {/* Hamburger */}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 aria-label="Toggle menu"
               >
                 <svg className="w-6 h-6 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,9 +190,9 @@ export default function Layout() {
         </div>
       </nav>
 
-      {/* Mobile side drawer */}
+      {/* Side drawer */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-40">
           {/* Backdrop */}
           <div className="fixed inset-0 bg-black/40" onClick={close} />
           {/* Drawer */}
