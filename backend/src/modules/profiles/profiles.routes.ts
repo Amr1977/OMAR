@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth';
-import { requireRole } from '../../middleware/roleGuard';
+import { requireRole, requireModule } from '../../middleware/roleGuard';
 import { upload } from '../../config/upload';
 import {
   createProfile,
@@ -19,7 +19,7 @@ const router = Router();
 
 router.use(authenticate);
 
-router.post('/', requireRole('GROOM', 'GUARDIAN', 'BOTH', 'ADMIN'), createProfile);
+router.post('/', requireRole('GROOM', 'GUARDIAN', 'BOTH', 'ADMIN'), requireModule('marriage', 'guardian'), createProfile);
 router.get('/my', getMyProfile);
 router.get('/:id', getProfile);
 router.put('/:id', updateProfile);

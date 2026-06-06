@@ -3,6 +3,20 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
 
+const MODULE_ROLE_MAP: Record<string, string[]> = {
+  marriage: ['GROOM'],
+  guardian: ['GUARDIAN'],
+};
+
+const deriveRole = (modules: string[]): string => {
+  const hasMarriage = modules.includes('marriage');
+  const hasGuardian = modules.includes('guardian');
+  if (hasMarriage && hasGuardian) return 'BOTH';
+  if (hasMarriage) return 'GROOM';
+  if (hasGuardian) return 'GUARDIAN';
+  return 'SOCIAL';
+};
+
 const generateTokens = (userId: string) => {
   const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
     expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any,
@@ -13,9 +27,23 @@ const generateTokens = (userId: string) => {
   return { accessToken, refreshToken };
 };
 
+const formatUser = (user: any) => ({
+  id: user.id,
+  firebaseUid: user.firebaseUid,
+  phone: user.phone,
+  email: user.email,
+  role: user.role,
+  enabledModules: user.enabledModules,
+  isVerified: user.isVerified,
+  isActive: user.isActive,
+  isBanned: user.isBanned,
+  subscriptionPlan: user.subscriptionPlan,
+  language: user.language,
+});
+
 export const register = async (req: Request, res: Response) => {
   try {
-    const { firebaseUid, phone, email, role, language } = req.body;
+    const { firebaseUid, phone, email, role: reqRole, language, modules } = req.body;
 
     let user = await prisma.user.findFirst({
       where: {
@@ -30,12 +58,22 @@ export const register = async (req: Request, res: Response) => {
     const isNew = !user;
 
     if (!user) {
+      const selectedModules: string[] = modules || [];
+      if (reqRole === 'GROOM' && !selectedModules.includes('marriage')) selectedModules.push('marriage');
+      if (reqRole === 'GUARDIAN' && !selectedModules.includes('guardian')) selectedModules.push('guardian');
+      if (reqRole === 'BOTH') {
+        if (!selectedModules.includes('marriage')) selectedModules.push('marriage');
+        if (!selectedModules.includes('guardian')) selectedModules.push('guardian');
+      }
+      const role = reqRole || deriveRole(selectedModules);
+
       user = await prisma.user.create({
         data: {
           firebaseUid,
           phone,
           email,
-          role: role || 'GROOM',
+          role: role as any,
+          enabledModules: selectedModules,
           language: language || 'ar',
         },
       });
@@ -49,16 +87,7 @@ export const register = async (req: Request, res: Response) => {
     const tokens = generateTokens(user.id);
 
     return res.status(isNew ? 201 : 200).json({
-      user: {
-        id: user.id,
-        firebaseUid: user.firebaseUid,
-        phone: user.phone,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified,
-        subscriptionPlan: user.subscriptionPlan,
-        language: user.language,
-      },
+      user: formatUser(user),
       ...tokens,
     });
   } catch (error) {
@@ -67,11 +96,35 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
+export const updateModules = async (req: AuthRequest, res: Response) => {
+  try {
+    const { modules } = req.body;
+    if (!Array.isArray(modules)) {
+      return res.status(400).json({ error: 'INVALID', message: 'modules must be an array' });
+    }
+
+    const validModules = ['marriage', 'guardian'];
+    const filtered = modules.filter((m: string) => validModules.includes(m));
+    const role = deriveRole(filtered);
+
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        enabledModules: filtered,
+        role: role as any,
+      },
+    });
+
+    return res.json({ user: formatUser(user) });
+  } catch (error) {
+    console.error('Update modules error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to update modules' });
+  }
+};
+
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
     const { phone, code } = req.body;
-    // In production, verify with Twilio
-    // For now, accept any 6-digit code
     if (!code || code.length !== 6) {
       return res.status(400).json({
         error: 'INVALID_CODE',
@@ -148,6 +201,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
       phone: user.phone,
       email: user.email,
       role: user.role,
+      enabledModules: user.enabledModules,
       isVerified: user.isVerified,
       subscriptionPlan: user.subscriptionPlan,
       subscriptionExpiry: user.subscriptionExpiry,

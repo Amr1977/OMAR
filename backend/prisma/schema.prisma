@@ -81,7 +81,8 @@ model User {
   firebaseUid       String           @unique
   phone             String?          @unique
   email             String?          @unique
-  role              UserRole         @default(GROOM)
+  role              UserRole         @default(SOCIAL)
+  enabledModules    Json             @default("[]")
   subscriptionPlan  SubscriptionPlan @default(FREE)
   subscriptionExpiry DateTime?
   isVerified        Boolean          @default(false)

@@ -13,7 +13,7 @@ export const signInWithGoogle = async (role?: string) => {
   const res: any = await api.post('/auth/register', {
     firebaseUid: firebaseUser.uid,
     email: firebaseUser.email,
-    role: role || 'GROOM',
+    role: role || 'SOCIAL',
   });
 
   setToken(res.accessToken);

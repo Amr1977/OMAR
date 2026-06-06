@@ -5,7 +5,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { changeLanguage } from '../../i18n';
 import { api, photoUrl } from '../../lib/api';
 
-type Section = 'language' | 'subscription' | 'profile' | null;
+type Section = 'language' | 'subscription' | 'modules' | 'profile' | null;
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
@@ -338,6 +338,74 @@ export default function Settings() {
           )}
         </div>
 
+        {/* Modules */}
+        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+          <button
+            onClick={() => toggleSection('modules')}
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-black/[0.02] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[var(--color-primary-pale)] flex items-center justify-center">
+                <svg className="w-5 h-5 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--color-text)] text-sm">الخدمات المفعلة</p>
+                <p className="text-xs text-[var(--color-muted)]">
+                  {(!user?.enabledModules || user.enabledModules.length === 0) && 'التواصل الاجتماعي فقط'}
+                  {user?.enabledModules?.includes('marriage') && 'الزواج '}
+                  {user?.enabledModules?.includes('guardian') && 'ولي أمر '}
+                </p>
+              </div>
+            </div>
+            <svg className={`w-5 h-5 text-[var(--color-muted)] transition-transform ${openSection === 'modules' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {openSection === 'modules' && (
+            <div className="px-4 pb-4">
+              <p className="text-xs text-[var(--color-muted)] mb-3">اختر الخدمات الإضافية التي تريد تفعيلها. يمكنك تغيير هذه الإعدادات في أي وقت.</p>
+              <div className="space-y-2">
+                <ModuleToggle
+                  label="الزواج"
+                  desc="إنشاء ملف تعارف والتواصل مع العائلات"
+                  checked={user?.enabledModules?.includes('marriage') ?? false}
+                  onChange={async (val) => {
+                    const modules = [...(user?.enabledModules || [])];
+                    if (val) {
+                      if (!modules.includes('marriage')) modules.push('marriage');
+                    } else {
+                      const idx = modules.indexOf('marriage');
+                      if (idx >= 0) modules.splice(idx, 1);
+                    }
+                    const { user: updated } = await api.auth.updateModules(modules);
+                    const store = useAuthStore.getState();
+                    store.setUser({ ...store.user!, role: updated.role, enabledModules: updated.enabledModules });
+                  }}
+                />
+                <ModuleToggle
+                  label="ولي أمر"
+                  desc="البحث عن عريس وإدارة ملفات العرائس"
+                  checked={user?.enabledModules?.includes('guardian') ?? false}
+                  onChange={async (val) => {
+                    const modules = [...(user?.enabledModules || [])];
+                    if (val) {
+                      if (!modules.includes('guardian')) modules.push('guardian');
+                    } else {
+                      const idx = modules.indexOf('guardian');
+                      if (idx >= 0) modules.splice(idx, 1);
+                    }
+                    const { user: updated } = await api.auth.updateModules(modules);
+                    const store = useAuthStore.getState();
+                    store.setUser({ ...store.user!, role: updated.role, enabledModules: updated.enabledModules });
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Profile Settings */}
         {profile && (
           <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
@@ -611,5 +679,44 @@ export default function Settings() {
 
       </div>
     </div>
+  );
+}
+
+function ModuleToggle({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (val: boolean) => void }) {
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = async () => {
+    setSaving(true);
+    try {
+      await onChange(!checked);
+    } catch {
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <button type="button" onClick={handleChange} disabled={saving}
+      className={`flex items-center gap-3 w-full p-3 rounded-xl border-2 text-right transition-all duration-200 ${
+        checked
+          ? 'border-[var(--color-primary)] bg-[var(--color-primary-pale)]'
+          : 'border-[var(--color-border)] hover:border-[#9CA3AF]'
+      } ${saving ? 'opacity-50' : ''}`}>
+      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
+        checked
+          ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
+          : 'border-[#9CA3AF]'
+      }`}>
+        {checked && (
+          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </div>
+      <div className="flex-1 text-left">
+        <p className="text-sm font-semibold text-[var(--color-text)]">{label}</p>
+        <p className="text-xs text-[var(--color-muted)]">{desc}</p>
+      </div>
+    </button>
   );
 }

@@ -8,6 +8,7 @@ interface User {
   phone?: string;
   email?: string;
   role: string;
+  enabledModules: string[];
   isVerified: boolean;
   subscriptionPlan: string;
   subscriptionExpiry?: string;

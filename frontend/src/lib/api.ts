@@ -85,6 +85,7 @@ export const api = {
     getMe: () => api.get('/auth/me'),
     refreshToken: (refreshToken: string) => api.post('/auth/refresh-token', { refreshToken }),
     logout: () => api.post('/auth/logout'),
+    updateModules: (modules: string[]) => api.put('/auth/modules', { modules }),
   },
 
   // Profile

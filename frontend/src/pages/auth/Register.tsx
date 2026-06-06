@@ -7,13 +7,6 @@ import { useAuthStore } from '../../stores/authStore';
 import { api, setToken } from '../../lib/api';
 import { signInWithGoogle } from '../../lib/googleAuth';
 
-const roles = [
-  { value: 'SOCIAL', label: 'تواصل اجتماعي', desc: 'أركز على المنشورات', icon: '🌐' },
-  { value: 'GROOM', label: 'راغب في الزواج', desc: 'أبحث عن زوجة', icon: '👤' },
-  { value: 'GUARDIAN', label: 'ولي أمر', desc: 'أبحث عن زوج لمن أرعاه', icon: '👪' },
-  { value: 'BOTH', label: 'الاثنين معاً', desc: 'أبحث عن زوجة ولدي من أرعاه', icon: '🤝' },
-];
-
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -21,13 +14,21 @@ export default function Register() {
   const [form, setForm] = useState({
     email: '',
     password: '',
-    role: 'GROOM',
+    modules: [] as string[],
     language: 'ar',
   });
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+
+  const toggleModule = (mod: string) => {
+    setForm(prev => ({
+      ...prev,
+      modules: prev.modules.includes(mod)
+        ? prev.modules.filter(m => m !== mod)
+        : [...prev.modules, mod],
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,14 +39,14 @@ export default function Register() {
       const result = await api.post('/auth/register', {
         firebaseUid: cred.user.uid,
         email: form.email,
-        role: form.role,
+        modules: form.modules,
         language: form.language,
       });
       setToken(result.accessToken);
       localStorage.setItem('auth_token', result.accessToken);
       const user = await api.auth.getMe();
       login(result.accessToken, user);
-      navigate(form.role === 'SOCIAL' ? '/social' : '/profile/setup');
+      navigate(user?.enabledModules?.length ? '/profile/setup' : '/social');
     } catch (err: any) {
       const msg = err.code === 'auth/email-already-in-use'
         ? 'هذا البريد مسجل بالفعل'
@@ -62,8 +63,8 @@ export default function Register() {
     setGoogleLoading(true);
     setError('');
     try {
-      await signInWithGoogle(form.role);
-      navigate(form.role === 'SOCIAL' ? '/social' : '/profile/setup');
+      const userData = await signInWithGoogle();
+      navigate(userData?.enabledModules?.length ? '/profile/setup' : '/social');
     } catch (err: any) {
       setError(err.message || 'فشل التسجيل عبر Google');
     } finally {
@@ -74,7 +75,6 @@ export default function Register() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-8 px-4">
       <div className="w-full max-w-md">
-        {/* Brand header */}
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-[#1B4332] dark:text-[#DAA520] font-display tracking-tight">
             عمر
@@ -82,7 +82,6 @@ export default function Register() {
           <p className="text-sm text-[#6B7280] dark:text-gray-400 mt-1">شبكة اجتماعية متكاملة للرجال</p>
         </div>
 
-        {/* Card */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-[#E5E7EB] dark:border-gray-700 p-8 md:p-10 transition-all duration-200">
           <div className="text-center mb-8">
             <div className="w-14 h-14 bg-[#1B4332]/10 dark:bg-[#DAA520]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -103,7 +102,6 @@ export default function Register() {
             </div>
           )}
 
-          {/* Google button */}
           <button onClick={handleGoogle} disabled={googleLoading}
             className="w-full py-3.5 border-2 border-[#E5E7EB] dark:border-gray-600 rounded-xl font-medium flex items-center justify-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-all duration-200 group">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -117,7 +115,6 @@ export default function Register() {
             </span>
           </button>
 
-          {/* Divider */}
           <div className="relative my-7">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-[#E5E7EB] dark:border-gray-600" />
@@ -127,28 +124,56 @@ export default function Register() {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Role selector */}
             <div>
-              <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2.5">أنا ...</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {roles.map((r) => (
-                  <button key={r.value} type="button" onClick={() => setForm({ ...form, role: r.value })}
-                    className={`p-3 rounded-xl border-2 text-center transition-all duration-200 ${
-                      form.role === r.value
-                        ? 'border-[#1B4332] dark:border-[#DAA520] bg-[#1B4332]/5 dark:bg-[#DAA520]/10 shadow-sm'
-                        : 'border-[#E5E7EB] dark:border-gray-600 hover:border-[#9CA3AF] dark:hover:border-gray-500'
-                    }`}>
-                    <div className="text-xl mb-1">{r.icon}</div>
-                    <div className={`text-xs font-medium leading-tight ${
-                      form.role === r.value ? 'text-[#1B4332] dark:text-[#DAA520]' : 'text-[#6B7280] dark:text-gray-400'
-                    }`}>
-                      {r.label}
-                    </div>
-                  </button>
-                ))}
+              <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2.5">الخدمات التي تهمني</label>
+              <div className="grid grid-cols-1 gap-2">
+                <button type="button" onClick={() => toggleModule('marriage')}
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 text-right transition-all duration-200 ${
+                    form.modules.includes('marriage')
+                      ? 'border-[#1B4332] dark:border-[#DAA520] bg-[#1B4332]/5 dark:bg-[#DAA520]/10 shadow-sm'
+                      : 'border-[#E5E7EB] dark:border-gray-600 hover:border-[#9CA3AF] dark:hover:border-gray-500'
+                  }`}>
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
+                    form.modules.includes('marriage')
+                      ? 'bg-[#1B4332] dark:bg-[#DAA520] border-[#1B4332] dark:border-[#DAA520]'
+                      : 'border-[#9CA3AF]'
+                  }`}>
+                    {form.modules.includes('marriage') && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[#374151] dark:text-gray-200">الزواج</p>
+                    <p className="text-xs text-[#6B7280] dark:text-gray-400">إنشاء ملف تعارف والتواصل مع العائلات</p>
+                  </div>
+                </button>
+                <button type="button" onClick={() => toggleModule('guardian')}
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 text-right transition-all duration-200 ${
+                    form.modules.includes('guardian')
+                      ? 'border-[#1B4332] dark:border-[#DAA520] bg-[#1B4332]/5 dark:bg-[#DAA520]/10 shadow-sm'
+                      : 'border-[#E5E7EB] dark:border-gray-600 hover:border-[#9CA3AF] dark:hover:border-gray-500'
+                  }`}>
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
+                    form.modules.includes('guardian')
+                      ? 'bg-[#1B4332] dark:bg-[#DAA520] border-[#1B4332] dark:border-[#DAA520]'
+                      : 'border-[#9CA3AF]'
+                  }`}>
+                    {form.modules.includes('guardian') && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[#374151] dark:text-gray-200">ولي أمر</p>
+                    <p className="text-xs text-[#6B7280] dark:text-gray-400">البحث عن عريس والتواصل مع المتقدمين</p>
+                  </div>
+                </button>
               </div>
+              <p className="text-xs text-[#9CA3AF] dark:text-gray-500 mt-2">يمكنك تغيير هذه الإعدادات لاحقاً من صفحة الإعدادات</p>
             </div>
 
             <div>
@@ -169,22 +194,9 @@ export default function Register() {
                 <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full pr-11 pl-11 py-3 border-2 border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-[#374151] dark:text-gray-200 placeholder-[#9CA3AF] focus:outline-none focus:border-[#1B4332] dark:focus:border-[#DAA520] transition-colors duration-200 text-sm"
+                <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="w-full pr-11 pl-4 py-3 border-2 border-[#E5E7EB] dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-[#374151] dark:text-gray-200 placeholder-[#9CA3AF] focus:outline-none focus:border-[#1B4332] dark:focus:border-[#DAA520] transition-colors duration-200 text-sm"
                   placeholder="أقل شيء 6 أحرف" minLength={6} required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] dark:hover:text-gray-300 transition-colors">
-                  {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
-                </button>
               </div>
             </div>
 
@@ -202,7 +214,6 @@ export default function Register() {
             </button>
           </form>
 
-          {/* Footer */}
           <p className="mt-7 text-center text-sm text-[#6B7280] dark:text-gray-400">
             لديك حساب بالفعل؟{' '}
             <Link to="/login" className="text-[#1B4332] dark:text-[#DAA520] font-semibold hover:underline">

@@ -40,7 +40,7 @@ import ServiceForm from './pages/services/ServiceForm';
 import MyServices from './pages/services/MyServices';
 import MyBookings from './pages/services/MyBookings';
 
-function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
+function ProtectedRoute({ children, roles, requireModule }: { children: React.ReactNode; roles?: string[]; requireModule?: string }) {
   const { isAuthenticated, isLoading, user } = useAuthStore();
 
   if (isLoading) {
@@ -53,6 +53,13 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
 
   if (roles && user && !roles.includes(user.role)) {
     return <Navigate to="/" replace />;
+  }
+
+  if (requireModule && user && user.role !== 'ADMIN') {
+    const modules = user.enabledModules || [];
+    if (!modules.includes(requireModule)) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <>{children}</>;
@@ -85,13 +92,13 @@ export default function App() {
         <Route path="marriage/hafsa" element={<HafsaStory />} />
         <Route path="profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
         <Route path="profile/my" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
-        <Route path="browse" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><Browse /></ProtectedRoute>} />
-        <Route path="browse/:id" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><ProfileDetail /></ProtectedRoute>} />
-        <Route path="ai-suggestions" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><AiSuggestions /></ProtectedRoute>} />
-        <Route path="requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
-        <Route path="requests/sent" element={<ProtectedRoute><SentRequests /></ProtectedRoute>} />
-        <Route path="messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-        <Route path="messages/:id" element={<ProtectedRoute><Conversation /></ProtectedRoute>} />
+        <Route path="browse" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']} requireModule="guardian"><Browse /></ProtectedRoute>} />
+        <Route path="browse/:id" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']} requireModule="guardian"><ProfileDetail /></ProtectedRoute>} />
+        <Route path="ai-suggestions" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']} requireModule="guardian"><AiSuggestions /></ProtectedRoute>} />
+        <Route path="requests" element={<ProtectedRoute requireModule="marriage"><Requests /></ProtectedRoute>} />
+        <Route path="requests/sent" element={<ProtectedRoute requireModule="guardian"><SentRequests /></ProtectedRoute>} />
+        <Route path="messages" element={<ProtectedRoute requireModule="marriage"><Messages /></ProtectedRoute>} />
+        <Route path="messages/:id" element={<ProtectedRoute requireModule="marriage"><Conversation /></ProtectedRoute>} />
         <Route path="social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
         <Route path="social/post/:id" element={<PostDetail />} />
         <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
@@ -108,9 +115,9 @@ export default function App() {
         <Route path="admin/subscriptions" element={<ProtectedRoute roles={['ADMIN']}><AdminSubscriptions /></ProtectedRoute>} />
         <Route path="admin/donations" element={<ProtectedRoute roles={['ADMIN']}><AdminDonations /></ProtectedRoute>} />
         <Route path="donate" element={<ProtectedRoute><Donate /></ProtectedRoute>} />
-        <Route path="guardian/brides" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><BrideList /></ProtectedRoute>} />
-        <Route path="guardian/brides/new" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><BrideForm /></ProtectedRoute>} />
-        <Route path="guardian/brides/:id/edit" element={<ProtectedRoute roles={['GUARDIAN', 'BOTH', 'ADMIN']}><BrideForm /></ProtectedRoute>} />
+        <Route path="guardian/brides" element={<ProtectedRoute requireModule="guardian"><BrideList /></ProtectedRoute>} />
+        <Route path="guardian/brides/new" element={<ProtectedRoute requireModule="guardian"><BrideForm /></ProtectedRoute>} />
+        <Route path="guardian/brides/:id/edit" element={<ProtectedRoute requireModule="guardian"><BrideForm /></ProtectedRoute>} />
         <Route path="services" element={<ProtectedRoute><ServiceList /></ProtectedRoute>} />
         <Route path="services/new" element={<ProtectedRoute><ServiceForm /></ProtectedRoute>} />
         <Route path="services/:id" element={<ServiceDetail />} />

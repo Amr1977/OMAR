@@ -43,6 +43,10 @@ export default function Layout() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const modules = user?.enabledModules || [];
+  const hasMarriage = modules.includes('marriage');
+  const hasGuardian = modules.includes('guardian');
+
   const navLinks = [
     { path: '/', label: t('nav.home') },
     ...(isAuthenticated
@@ -50,26 +54,16 @@ export default function Layout() {
           { path: '/social', label: 'المنشورات' },
           { path: '/services', label: 'الخدمات' },
           { path: '/profile/my', label: t('profile.my') },
-        ]
-      : []),
-    ...(isAuthenticated && user?.role === 'GROOM'
-      ? [
-          { path: '/requests', label: t('nav.requests') },
-          { path: '/messages', label: t('nav.messages') },
-        ]
-      : []),
-    ...(isAuthenticated && (user?.role === 'GUARDIAN' || user?.role === 'BOTH')
-      ? [
-          { path: '/browse', label: t('nav.browse') },
-          { path: '/guardian/brides', label: 'العرائس' },
-          { path: '/requests/sent', label: t('nav.requests') },
-          { path: '/messages', label: t('nav.messages') },
-        ]
-      : []),
-    ...(isAuthenticated && user?.role === 'SOCIAL'
-      ? [
-          { path: '/social', label: 'المنشورات' },
-          { path: '/profile/my', label: t('profile.my') },
+          ...(hasMarriage ? [
+            { path: '/requests', label: t('nav.requests') },
+            { path: '/messages', label: t('nav.messages') },
+          ] : []),
+          ...(hasGuardian ? [
+            { path: '/browse', label: t('nav.browse') },
+            { path: '/guardian/brides', label: 'العرائس' },
+            { path: '/requests/sent', label: t('nav.requests') },
+            { path: '/messages', label: t('nav.messages') },
+          ] : []),
         ]
       : []),
     ...(isAuthenticated && user?.role === 'ADMIN'
@@ -88,6 +82,7 @@ export default function Layout() {
     ...(isAuthenticated
       ? [
           { path: '/settings/subscription', label: 'الاشتراك' },
+          { path: '/settings', label: 'الإعدادات' },
           { path: '/donate', label: 'تبرع' },
           { path: '/feedback', label: 'تواصل معنا' },
         ]
