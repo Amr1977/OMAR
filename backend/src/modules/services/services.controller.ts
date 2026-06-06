@@ -300,6 +300,77 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const uploadServiceImage = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = p(req);
+    const service = await prisma.service.findUnique({ where: { id } });
+    if (!service) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Service not found' });
+    }
+    if (service.providerId !== req.userId) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your service' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'VALIDATION', message: 'No file provided' });
+    }
+
+    const maxImages = 10;
+    if (service.images.length >= maxImages) {
+      return res.status(400).json({
+        error: 'LIMIT',
+        messageAr: `الحد الأقصى ${maxImages} صور`,
+        messageEn: `Maximum ${maxImages} images allowed`,
+      });
+    }
+
+    const dataUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+    const updated = await prisma.service.update({
+      where: { id },
+      data: { images: { push: dataUrl } },
+    });
+
+    return res.json({ images: updated.images, added: dataUrl });
+  } catch (error) {
+    console.error('Upload service image error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to upload image' });
+  }
+};
+
+export const deleteServiceImage = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = p(req);
+    const { url } = req.body;
+    if (!url) {
+      return res.status(400).json({ error: 'VALIDATION', message: 'URL is required' });
+    }
+
+    const service = await prisma.service.findUnique({ where: { id } });
+    if (!service) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Service not found' });
+    }
+    if (service.providerId !== req.userId) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your service' });
+    }
+
+    const filtered = service.images.filter((img) => img !== url);
+    if (filtered.length === service.images.length) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Image not found' });
+    }
+
+    const updated = await prisma.service.update({
+      where: { id },
+      data: { images: filtered },
+    });
+
+    return res.json({ images: updated.images });
+  } catch (error) {
+    console.error('Delete service image error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to delete image' });
+  }
+};
+
 export const addReview = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = p(req);

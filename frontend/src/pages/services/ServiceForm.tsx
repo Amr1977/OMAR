@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import LocationPicker from '../../components/LocationPicker';
 import { api } from '../../lib/api';
@@ -7,9 +7,11 @@ export default function ServiceForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
+  const fileRef = useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     categoryId: '',
     title: '',
@@ -46,6 +48,44 @@ export default function ServiceForm() {
       }).catch(() => navigate('/services'));
     }
   }, [id]);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (isEdit) {
+      setUploading(true);
+      try {
+        const fd = new FormData();
+        fd.append('image', file);
+        const res = await api.services.uploadImage(id!, fd);
+        setForm((prev) => ({ ...prev, images: res.images }));
+      } catch (err: any) {
+        setError(err.message || 'فشل رفع الصورة');
+      } finally {
+        setUploading(false);
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setForm((prev) => ({ ...prev, images: [...prev.images, reader.result as string] }));
+      };
+      reader.readAsDataURL(file);
+    }
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const removeImage = async (url: string) => {
+    if (isEdit) {
+      try {
+        await api.services.deleteImage(id!, url);
+        setForm((prev) => ({ ...prev, images: prev.images.filter((img) => img !== url) }));
+      } catch (err: any) {
+        setError(err.message || 'فشل حذف الصورة');
+      }
+    } else {
+      setForm((prev) => ({ ...prev, images: prev.images.filter((img) => img !== url) }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,13 +209,31 @@ export default function ServiceForm() {
           </div>
         </div>
 
-        {/* Images (simple text URLs for now) */}
+        {/* Images */}
         <div>
-          <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-1.5">روابط الصور (رابط واحد كل سطر)</label>
-          <textarea value={form.images.join('\n')} onChange={(e) => setForm({ ...form, images: e.target.value.split('\n').filter(Boolean) })}
-            className="w-full border border-[#E5E7EB] dark:border-gray-600 rounded-lg px-4 py-2.5 text-sm bg-white dark:bg-gray-700 text-[#374151] dark:text-gray-200 resize-none"
-            rows={3} placeholder="https://example.com/image.jpg"
-          />
+          <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-1.5">الصور</label>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {form.images.map((img, i) => (
+              <div key={i} className="relative group">
+                <img src={img} alt="" className="w-20 h-20 object-cover rounded-lg border border-[#E5E7EB] dark:border-gray-600" />
+                <button type="button" onClick={() => removeImage(img)}
+                  className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >x</button>
+              </div>
+            ))}
+            {form.images.length < 10 && (
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+                className="w-20 h-20 border-2 border-dashed border-[#DAA520]/50 rounded-lg flex items-center justify-center text-[#DAA520] hover:border-[#DAA520] hover:bg-[#DAA520]/5 transition-colors disabled:opacity-50"
+              >
+                {uploading ? (
+                  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
+                )}
+              </button>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
         </div>
 
         <button type="submit" disabled={loading}

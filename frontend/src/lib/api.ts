@@ -79,6 +79,13 @@ export const api = {
     return this.request<T>(path, { method: 'DELETE' });
   },
 
+  deleteBody<T = any>(path: string, body?: any) {
+    return this.request<T>(path, {
+      method: 'DELETE',
+      body: JSON.stringify(body),
+    });
+  },
+
   // Auth
   auth: {
     register: (data: any) => api.post('/auth/register', data),
@@ -226,6 +233,8 @@ export const api = {
     create: (data: any) => api.post('/services', data),
     update: (id: string, data: any) => api.put(`/services/${id}`, data),
     delete: (id: string) => api.delete(`/services/${id}`),
+    uploadImage: (id: string, formData: FormData) => api.upload(`/services/${id}/images`, formData),
+    deleteImage: (id: string, url: string) => api.deleteBody(`/services/${id}/images`, { url }),
     book: (id: string, message?: string) => api.post(`/services/${id}/book`, { message }),
     bookings: () => api.get('/services/bookings'),
     updateBooking: (id: string, status: string) => api.put(`/services/bookings/${id}`, { status }),

@@ -1,7 +1,7 @@
 {
   "name": "omar-frontend",
   "private": true,
-  "version": "1.1.6",
+  "version": "1.1.7",
   "type": "module",
   "description": "Frontend for Hafsa — an Islamic marriage platform",
   "license": "MIT",
