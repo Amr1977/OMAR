@@ -39,6 +39,12 @@ import ServiceDetail from './pages/services/ServiceDetail';
 import ServiceForm from './pages/services/ServiceForm';
 import MyServices from './pages/services/MyServices';
 import MyBookings from './pages/services/MyBookings';
+import StoreList from './pages/eshops/StoreList';
+import StoreDetail from './pages/eshops/StoreDetail';
+import MyStore from './pages/eshops/MyStore';
+import Cart from './pages/eshops/Cart';
+import MyOrders from './pages/eshops/MyOrders';
+import StoreOrders from './pages/eshops/StoreOrders';
 
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { isAuthenticated, isLoading, user } = useAuthStore();
@@ -121,6 +127,12 @@ export default function App() {
         <Route path="services/:id/edit" element={<ProtectedRoute><ServiceForm /></ProtectedRoute>} />
         <Route path="my/services" element={<ProtectedRoute><MyServices /></ProtectedRoute>} />
         <Route path="my/bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
+        <Route path="eshops/stores" element={<ProtectedRoute><StoreList /></ProtectedRoute>} />
+        <Route path="eshops/stores/:id" element={<StoreDetail />} />
+        <Route path="eshops/my-store" element={<ProtectedRoute><MyStore /></ProtectedRoute>} />
+        <Route path="eshops/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+        <Route path="eshops/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+        <Route path="eshops/orders/store" element={<ProtectedRoute><StoreOrders /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

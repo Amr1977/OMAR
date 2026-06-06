@@ -53,6 +53,8 @@ export default function Layout() {
       ? [
           { path: '/social', label: 'المنشورات' },
           { path: '/services', label: 'الخدمات' },
+          { path: '/eshops/stores', label: t('eshops.title') },
+          { path: '/eshops/cart', label: 'السلة' },
           { path: '/profile/my', label: t('profile.my') },
           ...(hasGroom ? [
             { path: '/requests', label: t('nav.requests') },

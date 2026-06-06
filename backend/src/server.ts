@@ -23,6 +23,7 @@ import subscriptionRoutes from './modules/subscriptions/subscriptions.routes';
 import donationRoutes from './modules/donations/donations.routes';
 import brideRoutes from './modules/brides/brides.routes';
 import serviceRoutes from './modules/services/services.routes';
+import eshopRoutes from './modules/eshops/eshops.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -72,6 +73,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/brides', brideRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/eshops', eshopRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'NOT_FOUND', message: 'Route not found' });
