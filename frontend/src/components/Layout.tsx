@@ -53,6 +53,7 @@ export default function Layout() {
       ? [
           { path: '/social', label: 'المنشورات' },
           { path: '/services', label: 'الخدمات' },
+          { path: '/eshops/products', label: 'المنتجات' },
           { path: '/eshops/stores', label: t('eshops.title') },
           { path: '/eshops/cart', label: 'السلة' },
           { path: '/profile/my', label: t('profile.my') },
@@ -79,6 +80,7 @@ export default function Layout() {
           { path: '/admin/feedback', label: 'الملاحظات' },
           { path: '/admin/subscriptions', label: 'الاشتراكات' },
           { path: '/admin/donations', label: 'التبرعات' },
+          { path: '/admin/eshops', label: 'المتاجر' },
         ]
       : []),
     ...(isAuthenticated

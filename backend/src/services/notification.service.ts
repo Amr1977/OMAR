@@ -189,3 +189,29 @@ export const notifyNewFollower = async (followedUserId: string, followerName: st
     data: { followerName },
   });
 };
+
+export const notifyNewOrder = async (storeOwnerId: string, buyerEmail: string, orderId: string, total: number) => {
+  return createNotification({
+    userId: storeOwnerId,
+    type: 'new_order',
+    titleAr: 'طلب جديد',
+    titleEn: 'New Order',
+    bodyAr: `لديك طلب جديد بقيمة ${total} جنيه من ${buyerEmail}`,
+    bodyEn: `New order for ${total} EGP from ${buyerEmail}`,
+    data: { orderId, total, buyerEmail },
+  });
+};
+
+export const notifyOrderStatusChanged = async (buyerId: string, storeName: string, orderId: string, status: string) => {
+  const statusAr: Record<string, string> = { CONFIRMED: 'مؤكد', SHIPPED: 'تم الشحن', DELIVERED: 'تم التوصيل', CANCELLED: 'ملغي' };
+  const statusEn: Record<string, string> = { CONFIRMED: 'confirmed', SHIPPED: 'shipped', DELIVERED: 'delivered', CANCELLED: 'cancelled' };
+  return createNotification({
+    userId: buyerId,
+    type: 'order_status',
+    titleAr: 'تحديث حالة الطلب',
+    titleEn: 'Order Update',
+    bodyAr: `تم تغيير حالة طلبك من متجر ${storeName} إلى: ${statusAr[status] || status}`,
+    bodyEn: `Your order from ${storeName} has been ${statusEn[status] || status}`,
+    data: { orderId, status },
+  });
+};

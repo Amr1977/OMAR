@@ -3,7 +3,7 @@ import { authenticate } from '../../middleware/auth';
 import { upload } from '../../config/upload';
 import {
   listProductCategories,
-  createStore, getMyStore, listStores, getStore, updateStore,
+  createStore, getMyStore, listStores, getStore, getStoreBySlug, updateStore,
   uploadStoreImage, deleteStoreImage,
   createProduct, updateProduct, deleteProduct, listProducts, getProduct,
   uploadProductImage, deleteProductImage,
@@ -20,6 +20,7 @@ router.get('/product-categories', listProductCategories);
 router.get('/stores', listStores);
 router.post('/stores', authenticate, createStore);
 router.get('/stores/my', authenticate, getMyStore);
+router.get('/stores/slug/:slug', getStoreBySlug);
 router.get('/stores/:id', getStore);
 router.put('/stores/:id', authenticate, updateStore);
 router.post('/stores/:id/images', authenticate, upload.single('image'), uploadStoreImage);

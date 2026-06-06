@@ -16,6 +16,11 @@ import {
   listPosts,
   deletePost,
   listConversations,
+  adminListStores,
+  adminSuspendStore,
+  adminListProducts,
+  adminDeleteProduct,
+  adminListOrders,
 } from './admin.controller';
 import {
   listFeedback,
@@ -63,5 +68,10 @@ router.put('/subscriptions/:id/decline', declineSubscription);
 router.get('/donations', listDonations);
 router.put('/donations/:id/verify', verifyDonation);
 router.put('/donations/:id/decline', declineDonation);
+router.get('/stores', adminListStores);
+router.put('/stores/:id/suspend', adminSuspendStore);
+router.get('/products', adminListProducts);
+router.delete('/products/:id', adminDeleteProduct);
+router.get('/orders', adminListOrders);
 
 export default router;

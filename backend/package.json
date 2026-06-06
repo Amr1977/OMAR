@@ -1,6 +1,6 @@
 {
   "name": "omar-backend",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "private": true,
   "description": "Backend API for Hafsa — an Islamic marriage platform",
   "license": "MIT",

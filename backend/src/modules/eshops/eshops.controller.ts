@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
+import { notifyNewOrder, notifyOrderStatusChanged } from '../../services/notification.service';
 
 const p = (req: AuthRequest) => req.params as { id: string; storeId: string };
 
@@ -86,6 +87,22 @@ export const getStore = async (req: AuthRequest, res: Response) => {
     return res.json(store);
   } catch (error) {
     console.error('Get store error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to get store' });
+  }
+};
+
+export const getStoreBySlug = async (req: AuthRequest, res: Response) => {
+  try {
+    const store = await prisma.store.findUnique({
+      where: { slug: p(req).id },
+      include: { products: { where: { status: 'ACTIVE' }, include: { category: true }, orderBy: { createdAt: 'desc' } }, _count: { select: { products: true } } },
+    });
+    if (!store || store.status !== 'ACTIVE') {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Store not found' });
+    }
+    return res.json(store);
+  } catch (error) {
+    console.error('Get store by slug error:', error);
     return res.status(500).json({ error: 'INTERNAL', message: 'Failed to get store' });
   }
 };
@@ -371,6 +388,14 @@ export const checkout = async (req: AuthRequest, res: Response) => {
       include: { items: true },
     });
     await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+
+    // Notify store owner
+    const store = await prisma.store.findUnique({ where: { id: storeId } });
+    if (store && store.ownerId !== req.userId) {
+      const buyer = await prisma.user.findUnique({ where: { id: req.userId } });
+      notifyNewOrder(store.ownerId, buyer?.email || 'مشتري', order.id, total).catch(() => {});
+    }
+
     return res.status(201).json(order);
   } catch (error) {
     console.error('Checkout error:', error);
@@ -436,6 +461,12 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
     if (!order) return res.status(404).json({ error: 'NOT_FOUND', message: 'Order not found' });
     if (order.store.ownerId !== req.userId) return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your store order' });
     const updated = await prisma.order.update({ where: { id }, data: { status: newStatus } });
+
+    // Notify buyer
+    if (order.buyerId !== req.userId) {
+      notifyOrderStatusChanged(order.buyerId, order.store.name, order.id, newStatus).catch(() => {});
+    }
+
     return res.json(updated);
   } catch (error) {
     console.error('Update order status error:', error);

@@ -353,3 +353,85 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ error: 'INTERNAL', message: 'Failed to delete user' });
   }
 };
+
+// ─── E-shop Admin ─────────────────────────────────────────────────────
+export const adminListStores = async (req: AuthRequest, res: Response) => {
+  try {
+    const { page = '1', limit = '20' } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string));
+    const limitNum = Math.min(50, parseInt(limit as string));
+    const [stores, total] = await Promise.all([
+      prisma.store.findMany({ skip: (pageNum - 1) * limitNum, take: limitNum, orderBy: { createdAt: 'desc' }, include: { owner: { select: { id: true, email: true } }, _count: { select: { products: true, orders: true } } } }),
+      prisma.store.count(),
+    ]);
+    return res.json({ stores, total, page: pageNum, limit: limitNum });
+  } catch (error) {
+    console.error('Admin list stores error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to list stores' });
+  }
+};
+
+export const adminSuspendStore = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = p(req);
+    const store = await prisma.store.findUnique({ where: { id } });
+    if (!store) return res.status(404).json({ error: 'NOT_FOUND', message: 'Store not found' });
+    const newStatus = store.status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED';
+    const updated = await prisma.store.update({ where: { id }, data: { status: newStatus } });
+    await prisma.adminLog.create({
+      data: { adminId: req.userId!, action: newStatus === 'SUSPENDED' ? 'SUSPEND_STORE' : 'UNSUSPEND_STORE', targetId: id, details: { storeName: store.name } },
+    });
+    return res.json(updated);
+  } catch (error) {
+    console.error('Admin suspend store error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to update store' });
+  }
+};
+
+export const adminListProducts = async (req: AuthRequest, res: Response) => {
+  try {
+    const { page = '1', limit = '20' } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string));
+    const limitNum = Math.min(50, parseInt(limit as string));
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({ skip: (pageNum - 1) * limitNum, take: limitNum, orderBy: { createdAt: 'desc' }, include: { store: { select: { id: true, name: true } }, category: true } }),
+      prisma.product.count(),
+    ]);
+    return res.json({ products, total, page: pageNum, limit: limitNum });
+  } catch (error) {
+    console.error('Admin list products error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to list products' });
+  }
+};
+
+export const adminDeleteProduct = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = p(req);
+    const product = await prisma.product.findUnique({ where: { id }, include: { store: true } });
+    if (!product) return res.status(404).json({ error: 'NOT_FOUND', message: 'Product not found' });
+    await prisma.product.delete({ where: { id } });
+    await prisma.adminLog.create({
+      data: { adminId: req.userId!, action: 'DELETE_PRODUCT', targetId: id, details: { productName: product.name, storeName: product.store?.name } },
+    });
+    return res.json({ message: 'Product deleted' });
+  } catch (error) {
+    console.error('Admin delete product error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to delete product' });
+  }
+};
+
+export const adminListOrders = async (req: AuthRequest, res: Response) => {
+  try {
+    const { page = '1', limit = '20' } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string));
+    const limitNum = Math.min(50, parseInt(limit as string));
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({ skip: (pageNum - 1) * limitNum, take: limitNum, orderBy: { createdAt: 'desc' }, include: { buyer: { select: { id: true, email: true } }, store: { select: { id: true, name: true } }, items: true } }),
+      prisma.order.count(),
+    ]);
+    return res.json({ orders, total, page: pageNum, limit: limitNum });
+  } catch (error) {
+    console.error('Admin list orders error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to list orders' });
+  }
+};
