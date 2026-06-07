@@ -19,11 +19,17 @@ export const setupSocket = (httpServer: HttpServer) => {
       if (!token) {
         return next(new Error('Authentication required'));
       }
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
 
-      const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-      if (!user || !user.isActive || user.isBanned) {
-        return next(new Error('User not found or banned'));
+      // To avoid a DB round-trip on every socket handshake (which can cause timeouts under load),
+      // skip the prisma.user lookup by default. Enable DB verification by setting
+      // SOCKET_VERIFY_DB=true in the environment if strict checking is required.
+      if (process.env.SOCKET_VERIFY_DB === 'true') {
+        const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+        if (!user || !user.isActive || user.isBanned) {
+          return next(new Error('User not found or banned'));
+        }
       }
 
       (socket as any).userId = decoded.userId;

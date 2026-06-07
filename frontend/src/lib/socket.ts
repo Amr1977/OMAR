@@ -16,8 +16,15 @@ export const connectSocket = () => {
   if (!token || socket?.connected) return socket;
 
   socket = io(SOCKET_URL, {
+    path: '/socket.io',
     auth: { token },
+    // prefer websocket but allow polling fallback; tune reconnection to reduce noisy retries
     transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000, // MS to wait for initial connect
   });
 
   socket.on('connect', () => {
