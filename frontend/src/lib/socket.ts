@@ -2,7 +2,20 @@ import { io, Socket } from 'socket.io-client';
 import { getToken } from './api';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
-const SOCKET_URL = API_URL.replace(/\/api\/?$/, '');
+// Derive socket base and path robustly from API_URL so clients behind subpath proxies
+// (e.g., /hafsa/api) connect to the correct upgrade endpoint (/hafsa/socket.io)
+const SOCKET_URL = API_URL.replace(/\/api\/?$/, '') || '';
+let SOCKET_PATH = '/socket.io';
+try {
+  if (SOCKET_URL) {
+    // If SOCKET_URL is an absolute url, extract pathname
+    const u = SOCKET_URL.match(/^https?:\/\/(.+?)(\/.*)?$/);
+    if (u && u[2]) SOCKET_PATH = (u[2].endsWith('/') ? u[2].slice(0, -1) : u[2]) + '/socket.io';
+    else if (SOCKET_URL.startsWith('/')) SOCKET_PATH = (SOCKET_URL.endsWith('/') ? SOCKET_URL.slice(0, -1) : SOCKET_URL) + '/socket.io';
+  }
+} catch (e) {
+  SOCKET_PATH = '/socket.io';
+}
 
 let socket: Socket | null = null;
 let notificationHandler: ((notification: any) => void) | null = null;
@@ -16,14 +29,17 @@ export const connectSocket = () => {
   if (!token || socket?.connected) return socket;
 
   socket = io(SOCKET_URL, {
-    path: '/socket.io',
+    path: SOCKET_PATH,
     auth: { token },
     // prefer websocket but allow polling fallback; tune reconnection to reduce noisy retries
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: Infinity,
+    reconnectionAttempts: 10,
     reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
+    // exponential backoff upper bound
+    reconnectionDelayMax: 30000,
+    // jitter/randomization
+    randomizationFactor: 0.5,
     timeout: 20000, // MS to wait for initial connect
   });
 
@@ -31,12 +47,16 @@ export const connectSocket = () => {
     console.log('Socket connected');
   });
 
-  socket.on('disconnect', () => {
-    console.log('Socket disconnected');
+  socket.on('disconnect', (reason) => {
+    console.log('Socket disconnected:', reason);
   });
 
   socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error.message);
+    try {
+      console.error('Socket connection error:', error?.message || String(error), error);
+    } catch (e) {
+      console.error('Socket connection error (unknown)');
+    }
   });
 
   socket.on('new_notification', (notification: any) => {
