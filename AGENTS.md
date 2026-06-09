@@ -40,6 +40,9 @@ Full social media feature set implemented across all layers:
 - `backend/src/modules/browse/browse.controller.ts` — Filter GROOM-only in browse, exclude self-profile, fix AI suggestions
 - `frontend/src/pages/auth/Login.tsx` — Added gender confirmation modal for Google auth (Yes/No)
 - `frontend/src/pages/auth/Register.tsx` — Added gender confirmation modal for Google auth, button confirmation for email
+- `frontend/src/lib/api.ts` — Fixed `photoUrl` to extract origin only for uploads
+- `frontend/src/lib/logger.ts` — Fixed anonymous logs endpoint (`/logs/client/public`)
+- Nginx: Added `/logs/` and `/uploads/` proxy locations for hafsa backend
 - Fixed inactive user visibility in `browse.controller.ts`, `social.controller.ts`, `brides.controller.ts`
 - Removed duplicate `NotificationPayload` interface in `notification.service.ts`
 - Added HSTS and security headers in `server.ts`
@@ -47,7 +50,6 @@ Full social media feature set implemented across all layers:
 - Added file path sanitization in `upload.ts`
 - Added `socialLimiter` for rate limiting in `social.routes.ts`
 - Created `backend/src/services/cleanup.service.ts` for story/post cleanup
-- Fixed frontend logger to use `/logs/client/public` for anonymous users
 
 ## TypeScript Fixes
 - `req.params` values typed as `string | string[]` — use `const x = req.params.x as string` pattern
