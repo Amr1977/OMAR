@@ -75,4 +75,25 @@ export const disconnectSocket = () => {
   }
 };
 
+export const onNewPostInFeed = (cb: (data: { postId: string; authorId: string }) => void) => {
+  if (!socket) return;
+  socket.on('new_post_in_feed', cb);
+  return () => socket?.off('new_post_in_feed', cb);
+};
+
+export const onUserOnline = (cb: (data: { userId: string }) => void) => {
+  if (!socket) return;
+  socket.on('user_online', cb);
+};
+
+export const onUserOffline = (cb: (data: { userId: string; lastSeenAt: Date }) => void) => {
+  if (!socket) return;
+  socket.on('user_offline', cb);
+};
+
+export const emitPostCreated = (postId: string) => {
+  if (!socket) return;
+  socket.emit('post_created', { postId });
+};
+
 export const getSocket = () => socket;

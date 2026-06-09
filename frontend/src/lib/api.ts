@@ -174,6 +174,34 @@ export const api = {
     getUserPosts: (userId: string, params?: string) => api.get(`/social/user/${userId}/posts${params ? `?${params}` : ''}`),
     sharePost: (postId: string, content?: string) => api.post(`/social/posts/${postId}/share`, { content }),
     getReputation: (userId?: string) => api.get(userId ? `/social/user/${userId}/reputation` : '/social/reputation'),
+    getComments: (postId: string, params?: string) =>
+      api.get(`/social/posts/${postId}/comments${params ? `?${params}` : ''}`),
+    addReply: (postId: string, commentId: string, content: string) =>
+      api.post(`/social/posts/${postId}/comments/${commentId}/replies`, { content }),
+    getReplies: (postId: string, commentId: string, page?: number) =>
+      api.get(`/social/posts/${postId}/comments/${commentId}/replies?page=${page || 1}`),
+    toggleCommentLike: (commentId: string) =>
+      api.post(`/social/comments/${commentId}/like`),
+    toggleSave: (postId: string) => api.post(`/social/posts/${postId}/save`),
+    getSaved: (page?: number) => api.get(`/social/saved?page=${page || 1}`),
+    reportPost: (postId: string, reason: string, details?: string) =>
+      api.post(`/social/posts/${postId}/report`, { reason, details }),
+    toggleBlock: (userId: string) => api.post(`/social/block/${userId}`),
+    getBlocked: () => api.get('/social/blocked'),
+    searchUsers: (q: string) => api.get(`/social/users/search?q=${encodeURIComponent(q)}`),
+    getSuggested: () => api.get('/social/users/suggested'),
+    getUserProfile: (userId: string) => api.get(`/social/users/${userId}/profile`),
+    updateBio: (data: { bio?: string; tagline?: string; websiteUrl?: string }) =>
+      api.put('/social/me/bio', data),
+    getHashtagFeed: (tag: string, page?: number) =>
+      api.get(`/social/hashtag/${tag}?page=${page || 1}`),
+    getTrendingHashtags: () => api.get('/social/hashtags/trending'),
+    togglePin: (postId: string) => api.post(`/social/posts/${postId}/pin`),
+    uploadStoryMedia: (formData: FormData) => api.upload('/social/stories/media', formData),
+    createStory: (data: any) => api.post('/social/stories', data),
+    getStoriesFeed: () => api.get('/social/stories/feed'),
+    markStoryViewed: (storyId: string) => api.post(`/social/stories/${storyId}/view`),
+    deleteStory: (storyId: string) => api.delete(`/social/stories/${storyId}`),
   },
 
   // Admin

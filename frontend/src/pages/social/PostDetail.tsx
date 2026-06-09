@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
+import { renderRichText } from '../../lib/richText';
 import ImageViewer from '../../components/ImageViewer';
 import UserAvatar from '../../components/UserAvatar';
 
@@ -144,7 +145,7 @@ export default function PostDetail() {
 
         <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <Link to="/profile/my" className="flex items-center gap-3">
+            <Link to={post.user?.id === user?.id ? '/profile/my' : `/social/user/${post.user?.id}`} className="flex items-center gap-3">
               <UserAvatar
                 photo={post.user?.profile?.photos?.[0]?.url}
                 size="lg"
@@ -240,7 +241,7 @@ export default function PostDetail() {
             </div>
           ) : (
             <>
-              <p className="text-sm text-[var(--color-text)] leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
+              <p className="text-sm text-[var(--color-text)] leading-relaxed mb-4 whitespace-pre-wrap">{renderRichText(post.content)}</p>
               {post.mediaUrls?.length > 0 && (
                 <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
                   {post.mediaUrls.map((url: string, i: number) => (

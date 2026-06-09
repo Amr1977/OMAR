@@ -52,6 +52,7 @@ export default function Layout() {
     ...(isAuthenticated
       ? [
           { path: '/social', label: 'المنشورات' },
+          { path: '/social/people', label: 'اكتشف أشخاصاً' },
           { path: '/services', label: 'الخدمات' },
           { path: '/service-requests', label: 'طلبات الخدمة' },
           { path: '/search', label: 'بحث' },

@@ -1,7 +1,30 @@
 import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+
+const ensureDir = (dir: string) => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+};
+
+const uploadsBase = path.join(__dirname, '../../uploads');
+ensureDir(uploadsBase);
+
+const makeStorage = (subdir: string) => {
+  const dir = path.join(uploadsBase, subdir);
+  ensureDir(dir);
+  return multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, dir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || `.${file.mimetype.split('/')[1]}`;
+      const name = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`;
+      cb(null, name);
+    },
+  });
+};
 
 export const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: makeStorage('profiles'),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -11,8 +34,8 @@ export const upload = multer({
 });
 
 export const uploadMedia = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 },
+  storage: makeStorage('social'),
+  limits: { fileSize: 100 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = [
       'image/jpeg', 'image/png', 'image/gif', 'image/webp',
@@ -22,3 +45,41 @@ export const uploadMedia = multer({
     cb(new Error('Only images and videos are allowed'));
   },
 });
+
+export const uploadStory = multer({
+  storage: makeStorage('stories'),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error('Only images and short videos are allowed'));
+  },
+});
+
+export const uploadServiceImage = multer({
+  storage: makeStorage('services'),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
+  },
+});
+
+export const uploadStoreImage = multer({
+  storage: makeStorage('stores'),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
+  },
+});
+
+export const deleteFile = (filePath: string) => {
+  if (!filePath || filePath.startsWith('http') || filePath.startsWith('data:')) return;
+  const fullPath = filePath.startsWith('/uploads/')
+    ? path.join(uploadsBase, '..', filePath)
+    : filePath;
+  fs.unlink(fullPath, () => {});
+};

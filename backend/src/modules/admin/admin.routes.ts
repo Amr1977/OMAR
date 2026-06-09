@@ -21,6 +21,8 @@ import {
   adminListProducts,
   adminDeleteProduct,
   adminListOrders,
+  getPostReports,
+  resolvePostReport,
 } from './admin.controller';
 import {
   listFeedback,
@@ -72,6 +74,8 @@ router.get('/stores', adminListStores);
 router.put('/stores/:id/suspend', adminSuspendStore);
 router.get('/products', adminListProducts);
 router.delete('/products/:id', adminDeleteProduct);
+router.get('/post-reports', getPostReports);
+router.put('/post-reports/:id/resolve', resolvePostReport);
 router.get('/orders', adminListOrders);
 
 export default router;

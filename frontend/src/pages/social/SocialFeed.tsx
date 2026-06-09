@@ -2,11 +2,17 @@ import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
+import { useAuthStore } from '../../stores/authStore';
+import { onNewPostInFeed, emitPostCreated } from '../../lib/socket';
+import { renderRichText } from '../../lib/richText';
 import ImageViewer from '../../components/ImageViewer';
 import UserAvatar from '../../components/UserAvatar';
+import StoriesBar from './StoriesBar';
 
 export default function SocialFeed() {
   const { t } = useTranslation();
+  const { user: currentUser } = useAuthStore();
+  const currentUserId = currentUser?.id;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newPost, setNewPost] = useState('');
@@ -28,6 +34,7 @@ export default function SocialFeed() {
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [shareContent, setShareContent] = useState('');
   const [sharingSubmitting, setSharingSubmitting] = useState(false);
+  const [menuPostId, setMenuPostId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +63,15 @@ export default function SocialFeed() {
     if (page > 1) fetchPosts(true);
     else fetchPosts();
   }, [tab, page]);
+
+  useEffect(() => {
+    const unsub = onNewPostInFeed(({ postId }) => {
+      api.social.getPost(postId).then(post => {
+        setPosts(prev => [post, ...prev]);
+      }).catch(() => {});
+    });
+    return () => { unsub?.(); };
+  }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -103,7 +119,8 @@ export default function SocialFeed() {
     if (!canPublish) return;
     setSubmitting(true);
     try {
-      await api.social.createPost({ content: newPost, privacy: postPrivacy, mediaUrls });
+      const shared = await api.social.createPost({ content: newPost, privacy: postPrivacy, mediaUrls });
+      emitPostCreated(shared.id);
       setNewPost('');
       setMediaUrls([]);
       setMediaPreviews([]);
@@ -111,6 +128,23 @@ export default function SocialFeed() {
       setPage(1);
       if (page === 1) fetchPosts(false, 1);
     } catch (e) {} finally { setSubmitting(false); }
+  };
+
+  const handleSave = async (postId: string) => {
+    const res = await api.social.toggleSave(postId);
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: res.saved ? [{ userId: currentUserId }] : [] } : p));
+  };
+
+  const handlePin = async (postId: string) => {
+    await api.social.togglePin(postId);
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, isPinned: !p.isPinned } : p));
+  };
+
+  const handleReport = async (postId: string) => {
+    const reason = window.prompt('سبب الإبلاغ:');
+    if (!reason) return;
+    await api.social.reportPost(postId, reason);
+    alert('تم إرسال الإبلاغ، شكراً لك');
   };
 
   const handleLike = async (postId: string) => {
@@ -224,6 +258,8 @@ export default function SocialFeed() {
         </button>
       </div>
 
+      <StoriesBar />
+
       {/* Create post */}
       <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-6">
         <textarea
@@ -301,7 +337,7 @@ export default function SocialFeed() {
             }`}>
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
-                <Link to={`/profile/my`} className="flex items-center gap-3">
+                <Link to={post.user.id === currentUserId ? '/profile/my' : `/social/user/${post.user.id}`} className="flex items-center gap-3">
                     <UserAvatar
                       photo={post.user.profile?.photos?.[0]?.url}
                       size="lg"
@@ -324,7 +360,7 @@ export default function SocialFeed() {
                       <p className="text-xs text-[var(--color-muted)]">{new Date(post.createdAt).toLocaleDateString('ar-SA')}</p>
                     </div>
                   </Link>
-                {post.user.id === localStorage.getItem('user_id') && (
+                {post.user.id === currentUserId && (
                   <div className="flex gap-2">
                     <button onClick={() => startEdit(post)} className="text-xs text-blue-400 hover:text-blue-600">تعديل</button>
                     <button onClick={() => handleDelete(post.id)} className="text-xs text-red-400 hover:text-red-600">حذف</button>
@@ -413,7 +449,7 @@ export default function SocialFeed() {
                 </div>
               ) : (
               <Link to={`/social/post/${post.id}`}>
-                <p className="text-sm text-[var(--color-text)] leading-relaxed mb-3 whitespace-pre-wrap">{post.content}</p>
+                <p className="text-sm text-[var(--color-text)] leading-relaxed mb-3 whitespace-pre-wrap">{renderRichText(post.content)}</p>
                 {post.mediaUrls?.length > 0 && (
                   <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
                     {post.mediaUrls.map((url: string, i: number) => (
@@ -469,13 +505,18 @@ export default function SocialFeed() {
                   </svg>
                   {post._count.comments}
                 </Link>
+                <button onClick={() => handleSave(post.id)} className={`flex items-center gap-1.5 text-sm transition-colors ${post.saves?.[0] ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
+                  <svg className="w-4 h-4" fill={post.saves?.[0] ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
                 <button onClick={() => setSharingId(sharingId === post.id ? null : post.id)} className={`flex items-center gap-1.5 text-sm transition-colors ${sharingId === post.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   <span className="hidden sm:inline">إعادة نشر</span>
                 </button>
-                <button onClick={() => copyLink(post.id)} className="mr-auto flex items-center gap-1.5 text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors">
+                <button onClick={() => copyLink(post.id)} className="flex items-center gap-1.5 text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors">
                   {copiedId === post.id ? (
                     <span className="text-green-500 text-xs">تم النسخ!</span>
                   ) : (
@@ -487,6 +528,28 @@ export default function SocialFeed() {
                     </>
                   )}
                 </button>
+                <div className="relative mr-auto">
+                  <button onClick={() => setMenuPostId(menuPostId === post.id ? null : post.id)} className="p-1.5 text-[var(--color-muted)] hover:text-[var(--color-primary)]">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                    </svg>
+                  </button>
+                  {menuPostId === post.id && (
+                    <div className="absolute left-0 top-8 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-lg z-10 min-w-[140px]" dir="rtl">
+                      {post.user.id === currentUserId ? (
+                        <>
+                          <button onClick={() => { handlePin(post.id); setMenuPostId(null); }} className="w-full text-right px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-xl">
+                            {post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور'}
+                          </button>
+                          <button onClick={() => { startEdit(post); setMenuPostId(null); }} className="w-full text-right px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">تعديل</button>
+                          <button onClick={() => { handleDelete(post.id); setMenuPostId(null); }} className="w-full text-right px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-b-xl">حذف</button>
+                        </>
+                      ) : (
+                        <button onClick={() => { handleReport(post.id); setMenuPostId(null); }} className="w-full text-right px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl">إبلاغ</button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               {sharingId === post.id && (
                 <div className="mt-3 pt-3 border-t border-[var(--color-border)]">

@@ -75,6 +75,11 @@ enum PostPrivacy {
   SELECTED
 }
 
+enum StoryPrivacy {
+  PUBLIC
+  FOLLOWERS
+}
+
 enum ConnectionStatus {
   PENDING
   ACCEPTED
@@ -123,6 +128,11 @@ model User {
   averageRating     Float?
   reviewCount       Int              @default(0)
   isVerifiedSeller  Boolean          @default(false)
+  bio               String?          @db.Text
+  tagline           String?
+  websiteUrl        String?
+  lastSeenAt        DateTime?
+  isOnline          Boolean          @default(false)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -159,6 +169,15 @@ model User {
   serviceOffers    ServiceOffer[]    @relation("ProviderOffers")
   createdGroups    Group[]           @relation("CreatedGroups")
   groupMemberships GroupMember[]
+
+  savedPosts       PostSave[]
+  postMentions     PostMention[]
+  blockedBy        Block[]           @relation("BlockedUser")
+  blocking         Block[]           @relation("BlockingUser")
+  postCommentLikes PostCommentLike[]
+  postViews        PostView[]
+  stories          Story[]
+  postReports      PostReport[]      @relation("PostReporter")
 }
 
 model PushToken {
@@ -356,6 +375,8 @@ model Post {
   content   String   @db.Text
   mediaUrls String[]
   privacy   PostPrivacy @default(PUBLIC)
+  isPinned  Boolean  @default(false)
+  viewCount Int      @default(0)
   allowedUsers PostPrivacyUser[]
   likes     PostLike[]
   comments  PostComment[]
@@ -363,6 +384,11 @@ model Post {
   sharedPost   Post?      @relation("PostReposts", fields: [sharedPostId], references: [id], onDelete: SetNull)
   reposts      Post[]     @relation("PostReposts")
   groupPost GroupPost?
+  hashtags  PostHashtag[]
+  mentions  PostMention[]
+  saves     PostSave[]
+  views     PostView[]
+  reports   PostReport[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -395,8 +421,137 @@ model PostComment {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   content   String   @db.Text
+  parentId  String?
+  parent    PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   PostComment[] @relation("CommentReplies")
+  likes     PostCommentLike[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+}
+
+model PostCommentLike {
+  id        String      @id @default(cuid())
+  commentId String
+  comment   PostComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+}
+
+model PostSave {
+  id      String   @id @default(cuid())
+  postId  String
+  post    Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
+
+model PostView {
+  id       String   @id @default(cuid())
+  postId   String
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model Hashtag {
+  id        String        @id @default(cuid())
+  tag       String        @unique
+  postCount Int           @default(0)
+  posts     PostHashtag[]
+  createdAt DateTime      @default(now())
+
+  @@index([postCount])
+}
+
+model PostHashtag {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtagId String
+  hashtag   Hashtag  @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, hashtagId])
+  @@index([hashtagId])
+}
+
+model PostMention {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
+
+model PostReport {
+  id         String   @id @default(cuid())
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User     @relation("PostReporter", fields: [reporterId], references: [id])
+  reason     String
+  details    String?  @db.Text
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+
+  @@unique([postId, reporterId])
+  @@index([status])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("BlockingUser", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlockedUser", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+model Story {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl  String
+  mediaType String       @default("image")
+  caption   String?
+  privacy   StoryPrivacy @default(FOLLOWERS)
+  expiresAt DateTime
+  views     StoryView[]
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StoryView {
+  id       String   @id @default(cuid())
+  storyId  String
+  story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  userId   String
+  viewedAt DateTime @default(now())
+
+  @@unique([storyId, userId])
 }
 
 model Follow {

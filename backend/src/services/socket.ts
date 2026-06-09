@@ -145,9 +145,39 @@ export const setupSocket = (httpServer: HttpServer) => {
       }
     });
 
-    socket.on('disconnect', () => {
+    socket.on('post_created', async ({ postId }: { postId: string }) => {
+      try {
+        const post = await prisma.post.findUnique({
+          where: { id: postId },
+          select: { userId: true, privacy: true },
+        });
+        if (!post || post.privacy !== 'PUBLIC') return;
+        const followers = await prisma.follow.findMany({
+          where: { followingId: post.userId },
+          select: { followerId: true },
+        });
+        followers.forEach(f => {
+          io.to(`user:${f.followerId}`).emit('new_post_in_feed', { postId, authorId: post.userId });
+        });
+      } catch (err) {
+        console.error('post_created socket error:', err);
+      }
+    });
+
+    socket.on('disconnect', async () => {
+      try {
+        await prisma.user.update({ where: { id: userId }, data: { isOnline: false, lastSeenAt: new Date() } });
+        io.emit('user_offline', { userId, lastSeenAt: new Date() });
+      } catch {}
       console.log(`User disconnected: ${userId}`);
     });
+
+    (async () => {
+      try {
+        await prisma.user.update({ where: { id: userId }, data: { isOnline: true, lastSeenAt: new Date() } });
+        io.emit('user_online', { userId });
+      } catch {}
+    })();
   });
 
   return io;

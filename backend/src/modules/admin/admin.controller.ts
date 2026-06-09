@@ -420,6 +420,40 @@ export const adminDeleteProduct = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getPostReports = async (req: AuthRequest, res: Response) => {
+  try {
+    const { status = 'PENDING' } = req.query;
+    const reports = await prisma.postReport.findMany({
+      where: { status: status as string },
+      include: {
+        post: { select: { id: true, content: true, userId: true, user: { select: { profile: { select: { displayName: true } } } } } },
+        reporter: { select: { id: true, profile: { select: { displayName: true } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    return res.json(reports);
+  } catch (error) {
+    return res.status(500).json({ error: 'INTERNAL' });
+  }
+};
+
+export const resolvePostReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const { action } = req.body;
+    const report = await prisma.postReport.findUnique({ where: { id } });
+    if (!report) return res.status(404).json({ error: 'NOT_FOUND' });
+    await prisma.postReport.update({ where: { id }, data: { status: 'RESOLVED' } });
+    if (action === 'delete_post') {
+      await prisma.post.delete({ where: { id: report.postId } });
+    }
+    return res.json({ message: 'Report resolved' });
+  } catch (error) {
+    return res.status(500).json({ error: 'INTERNAL' });
+  }
+};
+
 export const adminListOrders = async (req: AuthRequest, res: Response) => {
   try {
     const { page = '1', limit = '20' } = req.query;

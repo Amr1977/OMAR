@@ -21,6 +21,9 @@ import Settings from './pages/settings/Settings';
 import Subscription from './pages/settings/Subscription';
 import SocialFeed from './pages/social/SocialFeed';
 import PostDetail from './pages/social/PostDetail';
+import UserPublicProfile from './pages/social/UserPublicProfile';
+import HashtagFeed from './pages/social/HashtagFeed';
+import PeopleSearch from './pages/social/PeopleSearch';
 import HafsaStory from './pages/siyar/HafsaStory';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -103,6 +106,9 @@ export default function App() {
         <Route path="messages" element={<ProtectedRoute roles={['GROOM', 'GUARDIAN', 'ADMIN']}><Messages /></ProtectedRoute>} />
         <Route path="messages/:id" element={<ProtectedRoute roles={['GROOM', 'GUARDIAN', 'ADMIN']}><Conversation /></ProtectedRoute>} />
         <Route path="social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
+        <Route path="social/user/:userId" element={<UserPublicProfile />} />
+        <Route path="social/hashtag/:tag" element={<ProtectedRoute><HashtagFeed /></ProtectedRoute>} />
+        <Route path="social/people" element={<ProtectedRoute><PeopleSearch /></ProtectedRoute>} />
         <Route path="social/post/:id" element={<PostDetail />} />
         <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
