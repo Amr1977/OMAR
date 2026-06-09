@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
+import { runAiReview } from '../../services/aiReview.service';
 
 const p = (req: AuthRequest) => req.params as { id: string; photoId: string };
 
@@ -206,29 +207,32 @@ export const uploadPhoto = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    let url = req.body.url;
-    let cloudinaryId = req.body.cloudinaryId;
+    const { cloudinaryUrl, cloudinaryId } = req.body;
 
-    if (!url && req.file) {
-      url = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    if (!cloudinaryUrl) {
+      return res.status(400).json({
+        error: 'CLOUDINARY_REQUIRED',
+        messageAr: 'يجب رفع الصورة عبر Cloudinary',
+        messageEn: 'Photo must be uploaded via Cloudinary. Send cloudinaryUrl and cloudinaryId.',
+      });
     }
 
-    if (!url) {
+    if (!cloudinaryUrl.includes('cloudinary.com') && !cloudinaryUrl.includes('res.cloudinary')) {
       return res.status(400).json({
-        error: 'NO_PHOTO',
-        messageAr: 'يرجى اختيار صورة',
-        messageEn: 'Please select a photo',
+        error: 'INVALID_URL',
+        messageAr: 'رابط الصورة غير صالح',
+        messageEn: 'Invalid Cloudinary URL',
       });
     }
 
     const photo = await prisma.profilePhoto.create({
       data: {
         profileId: params.id,
-        url,
-        cloudinaryId,
+        url: cloudinaryUrl,
+        cloudinaryId: cloudinaryId || null,
         isPrimary: photoCount === 0,
         order: photoCount,
-        isApproved: true,
+        isApproved: false,
       },
     });
 
@@ -356,35 +360,24 @@ export const submitForReview = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    if (profile.photos.length === 0) {
+      return res.status(400).json({
+        error: 'NO_PHOTOS',
+        messageAr: 'يجب إضافة صورة واحدة على الأقل قبل النشر',
+        messageEn: 'At least one photo is required before submitting for review',
+      });
+    }
+
     await prisma.profile.update({
       where: { id: params.id },
       data: { status: 'PENDING_AI_REVIEW' },
     });
 
-    // AI review will be processed asynchronously
-    // For now, auto-approve
-    const pid = params.id;
-    setTimeout(async () => {
-      try {
-        await prisma.profile.update({
-          where: { id: pid },
-          data: {
-            status: 'APPROVED',
-            aiReviewScore: 85,
-            aiReviewNotes: 'Auto-approved (AI review placeholder)',
-            aiReviewedAt: new Date(),
-            publishedAt: new Date(),
-          },
-        });
-      } catch (e) {
-        console.error('AI review callback error:', e);
-      }
-    }, 1000);
+    runAiReview(params.id, profile).catch(err =>
+      console.error('AI review failed for profile', params.id, err)
+    );
 
-    return res.json({
-      message: 'Profile submitted for review',
-      status: 'PENDING_AI_REVIEW',
-    });
+    return res.json({ message: 'Profile submitted for review', status: 'PENDING_AI_REVIEW' });
   } catch (error) {
     console.error('Submit for review error:', error);
     return res.status(500).json({ error: 'INTERNAL', message: 'Failed to submit for review' });

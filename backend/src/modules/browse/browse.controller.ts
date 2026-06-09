@@ -117,6 +117,56 @@ export const getProfileDetail = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const browseGroomsForGuardian = async (req: AuthRequest, res: Response) => {
+  try {
+    const { search, ageMin, ageMax, governorate, madhab, page = '1' } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string));
+    const limit = 20;
+    const skip = (pageNum - 1) * limit;
+
+    const where: Prisma.ProfileWhereInput = {
+      status: 'APPROVED',
+      user: {
+        roles: { array_contains: 'GROOM' } as any,
+      },
+    };
+
+    if (ageMin) where.age = { ...((where.age as any) || {}), gte: parseInt(ageMin as string) };
+    if (ageMax) where.age = { ...((where.age as any) || {}), lte: parseInt(ageMax as string) };
+    if (madhab) where.madhab = madhab as any;
+    if (governorate) where.residenceGovernorate = { contains: governorate as string, mode: 'insensitive' };
+    if (search) {
+      where.OR = [
+        { displayName: { contains: search as string, mode: 'insensitive' } },
+        { city: { contains: search as string, mode: 'insensitive' } },
+        { occupation: { contains: search as string, mode: 'insensitive' } },
+      ];
+    }
+
+    const [profiles, total] = await Promise.all([
+      prisma.profile.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { publishedAt: 'desc' },
+        include: {
+          photos: { where: { isPrimary: true }, take: 1 },
+          user: { select: { id: true, isVerified: true } },
+        },
+      }),
+      prisma.profile.count({ where }),
+    ]);
+
+    return res.json({
+      profiles,
+      pagination: { page: pageNum, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    console.error('Browse grooms error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to browse grooms' });
+  }
+};
+
 export const getAiSuggestions = async (req: AuthRequest, res: Response) => {
   try {
     const { wardAge, wardNationality, wardEducation, wardMaritalStatus } = req.query;

@@ -218,7 +218,7 @@ This enables auto-version-bumping on every commit.
 ## Project Structure
 
 ```
-HAFSA/
+OMAR/
 ├── backend/
 │   ├── src/
 │   │   ├── config/          # Firebase admin, etc.
@@ -411,4 +411,4 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 
 ## License
 
-[MIT](LICENSE) © Hafsa Project
+[MIT](LICENSE) © Omar Platform

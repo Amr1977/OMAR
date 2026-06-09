@@ -2,15 +2,49 @@ import { Response } from 'express';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
 
-const p = (req: AuthRequest) => req.params as { id: string };
+const p = (req: AuthRequest) => req.params as { id: string; groomId: string };
+
+const calculateIddahEndsAt = (
+  maritalStatus: string,
+  lastDivorceDate?: string | null,
+  husbandDeathDate?: string | null
+): { iddahEndsAt: Date | null; iddahComplete: boolean } => {
+  const now = new Date();
+
+  if (maritalStatus === 'مطلقة' && lastDivorceDate) {
+    const divorceDate = new Date(lastDivorceDate);
+    if (!isNaN(divorceDate.getTime())) {
+      const iddahEndsAt = new Date(divorceDate);
+      iddahEndsAt.setDate(iddahEndsAt.getDate() + 90);
+      return { iddahEndsAt, iddahComplete: now >= iddahEndsAt };
+    }
+  }
+
+  if (maritalStatus === 'أرملة' && husbandDeathDate) {
+    const deathDate = new Date(husbandDeathDate);
+    if (!isNaN(deathDate.getTime())) {
+      const iddahEndsAt = new Date(deathDate);
+      iddahEndsAt.setDate(iddahEndsAt.getDate() + 130);
+      return { iddahEndsAt, iddahComplete: now >= iddahEndsAt };
+    }
+  }
+
+  return { iddahEndsAt: null, iddahComplete: true };
+};
 
 export const createBride = async (req: AuthRequest, res: Response) => {
   try {
     const guardianId = req.userId!;
     const data = req.body;
 
+    const { iddahEndsAt, iddahComplete } = calculateIddahEndsAt(
+      data.maritalStatus,
+      data.lastDivorceDate,
+      data.husbandDeathDate
+    );
+
     const bride = await prisma.bride.create({
-      data: { guardianId, ...data },
+      data: { guardianId, ...data, iddahEndsAt, iddahComplete },
     });
     return res.status(201).json(bride);
   } catch (error) {
@@ -52,9 +86,16 @@ export const updateBride = async (req: AuthRequest, res: Response) => {
     });
     if (!existing) return res.status(404).json({ error: 'NOT_FOUND', message: 'Bride record not found' });
 
+    const data = req.body;
+    const { iddahEndsAt, iddahComplete } = calculateIddahEndsAt(
+      data.maritalStatus || existing.maritalStatus,
+      data.lastDivorceDate !== undefined ? data.lastDivorceDate : existing.lastDivorceDate,
+      data.husbandDeathDate !== undefined ? data.husbandDeathDate : existing.husbandDeathDate
+    );
+
     const bride = await prisma.bride.update({
       where: { id: p(req).id },
-      data: req.body,
+      data: { ...data, iddahEndsAt, iddahComplete },
     });
     return res.json(bride);
   } catch (error) {
@@ -91,6 +132,18 @@ export const exposeBride = async (req: AuthRequest, res: Response) => {
       where: { id: brideId, guardianId: req.userId! },
     });
     if (!bride) return res.status(404).json({ error: 'NOT_FOUND', message: 'Bride record not found' });
+
+    if (!bride.iddahComplete && bride.iddahEndsAt) {
+      const daysRemaining = Math.ceil(
+        (bride.iddahEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      );
+      return res.status(403).json({
+        error: 'IDDAH_INCOMPLETE',
+        messageAr: `لا يمكن الإتاحة — العدة لم تنته بعد (متبقي ${daysRemaining} يوم تقريباً)`,
+        messageEn: `Cannot expose — iddah period not yet complete (approx. ${daysRemaining} days remaining)`,
+        iddahEndsAt: bride.iddahEndsAt,
+      });
+    }
 
     const groom = await prisma.user.findUnique({ where: { id: groomId } });
     if (!groom) return res.status(404).json({ error: 'NOT_FOUND', message: 'Groom not found' });
@@ -148,7 +201,7 @@ export const getBrideExposures = async (req: AuthRequest, res: Response) => {
       where: { brideId },
       include: {
         groom: {
-          select: { id: true, phone: true, email: true },
+          select: { id: true, profile: { select: { displayName: true } }, phone: true, email: true },
         },
       },
       orderBy: { exposedAt: 'desc' },

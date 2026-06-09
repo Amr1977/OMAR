@@ -49,6 +49,10 @@ import MyStore from './pages/eshops/MyStore';
 import Cart from './pages/eshops/Cart';
 import MyOrders from './pages/eshops/MyOrders';
 import StoreOrders from './pages/eshops/StoreOrders';
+import Search from './pages/Search';
+import ConnectionRequests from './pages/connections/ConnectionRequests';
+import ServiceRequests from './pages/serviceRequests/ServiceRequests';
+import ServiceRequestForm from './pages/serviceRequests/ServiceRequestForm';
 
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { isAuthenticated, isLoading, user } = useAuthStore();
@@ -140,6 +144,10 @@ export default function App() {
         <Route path="eshops/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
         <Route path="eshops/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
         <Route path="eshops/orders/store" element={<ProtectedRoute><StoreOrders /></ProtectedRoute>} />
+        <Route path="search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+        <Route path="connections" element={<ProtectedRoute><ConnectionRequests /></ProtectedRoute>} />
+        <Route path="service-requests" element={<ProtectedRoute><ServiceRequests /></ProtectedRoute>} />
+        <Route path="service-requests/new" element={<ProtectedRoute><ServiceRequestForm /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

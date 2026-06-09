@@ -75,6 +75,39 @@ enum PostPrivacy {
   SELECTED
 }
 
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum ServiceRequestStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  CANCELLED
+}
+
+enum MarketplacePaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  DISPUTED
+}
+
+enum GroupPrivacy {
+  PUBLIC
+  PRIVATE
+  INVITE_ONLY
+}
+
+enum GroupMemberRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
 model User {
   id                String           @id @default(cuid())
   firebaseUid       String           @unique
@@ -87,6 +120,9 @@ model User {
   isActive          Boolean          @default(true)
   isBanned          Boolean          @default(false)
   language          String           @default("ar")
+  averageRating     Float?
+  reviewCount       Int              @default(0)
+  isVerifiedSeller  Boolean          @default(false)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -116,6 +152,13 @@ model User {
   store             Store?
   cart             Cart?
   orders           Order[]           @relation("BuyerOrders")
+
+  sentConnectionRequests     ConnectionRequest[] @relation("SentConnections")
+  receivedConnectionRequests ConnectionRequest[] @relation("ReceivedConnections")
+  serviceRequests  ServiceRequest[]  @relation
+  serviceOffers    ServiceOffer[]    @relation("ProviderOffers")
+  createdGroups    Group[]           @relation("CreatedGroups")
+  groupMemberships GroupMember[]
 }
 
 model PushToken {
@@ -235,6 +278,8 @@ model ContactRequest {
   profile      Profile  @relation(fields: [profileId], references: [id])
   receiverId   String
   receiver     User     @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  brideId      String?
+  bride        Bride?   @relation(fields: [brideId], references: [id], onDelete: SetNull)
   status       String   @default("PENDING")
   message      String?  @db.Text
   conversation Conversation?
@@ -242,12 +287,14 @@ model ContactRequest {
   updatedAt    DateTime @updatedAt
 
   @@unique([senderId, profileId])
+  @@index([brideId])
 }
 
 model Conversation {
   id             String   @id @default(cuid())
-  requestId      String   @unique
-  request        ContactRequest @relation(fields: [requestId], references: [id])
+  requestId      String?  @unique
+  request        ContactRequest? @relation(fields: [requestId], references: [id])
+  type           String   @default("REQUEST")
   messages       Message[]
   participants   ConversationParticipant[]
   lastMessageAt  DateTime?
@@ -315,6 +362,7 @@ model Post {
   sharedPostId String?
   sharedPost   Post?      @relation("PostReposts", fields: [sharedPostId], references: [id], onDelete: SetNull)
   reposts      Post[]     @relation("PostReposts")
+  groupPost GroupPost?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -509,10 +557,13 @@ model Bride {
   notes                 String?
 
   status                String   @default("ACTIVE")
+  iddahEndsAt           DateTime?
+  iddahComplete         Boolean  @default(true)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
   exposures        BrideExposure[]
+  contactRequests  ContactRequest[]
 
   @@index([guardianId])
 }
@@ -530,6 +581,131 @@ model BrideExposure {
   @@unique([brideId, groomId])
   @@index([groomId])
   @@index([brideId])
+}
+
+model ConnectionRequest {
+  id          String           @id @default(cuid())
+  senderId    String
+  sender      User             @relation("SentConnections", fields: [senderId], references: [id])
+  receiverId  String
+  receiver    User             @relation("ReceivedConnections", fields: [receiverId], references: [id])
+  status      ConnectionStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
+}
+
+model ServiceRequest {
+  id           String               @id @default(cuid())
+  userId       String
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId   String
+  category     ServiceCategory      @relation(fields: [categoryId], references: [id])
+  title        String
+  description  String               @db.Text
+  budgetMin    Float?
+  budgetMax    Float?
+  currency     String               @default("EGP")
+  governorate  String?
+  city         String?
+  latitude     Float?
+  longitude    Float?
+  urgency      String               @default("NORMAL")
+  status       ServiceRequestStatus @default(OPEN)
+  offers       ServiceOffer[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model ServiceOffer {
+  id               String         @id @default(cuid())
+  serviceRequestId String
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  providerId       String
+  provider         User           @relation("ProviderOffers", fields: [providerId], references: [id])
+  price            Float
+  message          String         @db.Text
+  status           String         @default("PENDING")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([serviceRequestId, providerId])
+  @@index([providerId])
+}
+
+model ServiceBookingPayment {
+  id            String                  @id @default(cuid())
+  bookingId     String                  @unique
+  booking       ServiceBooking          @relation(fields: [bookingId], references: [id])
+  amount        Float
+  currency      String                  @default("EGP")
+  method        PaymentMethod
+  proofImage    String?                 @db.Text
+  status        MarketplacePaymentStatus @default(PENDING)
+  note          String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+}
+
+model OrderPayment {
+  id        String                  @id @default(cuid())
+  orderId   String                  @unique
+  order     Order                   @relation(fields: [orderId], references: [id])
+  amount    Float
+  currency  String                  @default("EGP")
+  method    PaymentMethod
+  proofImage String?                @db.Text
+  status    MarketplacePaymentStatus @default(PENDING)
+  note      String?
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+}
+
+model Group {
+  id          String       @id @default(cuid())
+  name        String
+  nameAr      String?
+  description String       @db.Text
+  avatar      String?
+  banner      String?
+  privacy     GroupPrivacy @default(PUBLIC)
+  createdById String
+  createdBy   User         @relation("CreatedGroups", fields: [createdById], references: [id])
+  members     GroupMember[]
+  posts       GroupPost[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([privacy])
+}
+
+model GroupMember {
+  id        String          @id @default(cuid())
+  groupId   String
+  group     Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      GroupMemberRole @default(MEMBER)
+  joinedAt  DateTime        @default(now())
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model GroupPost {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  postId    String   @unique
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 enum ServiceStatus {
@@ -557,32 +733,35 @@ model ServiceCategory {
   parent    ServiceCategory? @relation("CategoryTree", fields: [parentId], references: [id])
   children  ServiceCategory[] @relation("CategoryTree")
   services  Service[]
+  serviceRequests ServiceRequest[]
   createdAt DateTime @default(now())
 }
 
 model Service {
-  id            String         @id @default(cuid())
-  providerId    String
-  provider      User           @relation("ProviderServices", fields: [providerId], references: [id], onDelete: Cascade)
-  categoryId    String
-  category      ServiceCategory @relation(fields: [categoryId], references: [id])
-  title         String
-  description   String         @db.Text
-  price         Float
-  priceUnit     String         @default("FIXED")
-  currency      String         @default("EGP")
-  latitude      Float?
-  longitude     Float?
-  address       String?
-  city          String?
-  governorate   String?
-  images        String[]
-  status        ServiceStatus  @default(ACTIVE)
-  viewCount     Int            @default(0)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  bookings      ServiceBooking[]
-  reviews       ServiceReview[]
+  id               String         @id @default(cuid())
+  providerId       String
+  provider         User           @relation("ProviderServices", fields: [providerId], references: [id], onDelete: Cascade)
+  categoryId       String
+  category         ServiceCategory @relation(fields: [categoryId], references: [id])
+  title            String
+  description      String         @db.Text
+  price            Float
+  priceUnit        String         @default("FIXED")
+  currency         String         @default("EGP")
+  latitude         Float?
+  longitude        Float?
+  address          String?
+  city             String?
+  governorate      String?
+  images           String[]
+  status           ServiceStatus  @default(ACTIVE)
+  viewCount        Int            @default(0)
+  islamicCategory  String?
+  isHalalCertified Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  bookings         ServiceBooking[]
+  reviews          ServiceReview[]
 }
 
 model ServiceBooking {
@@ -593,6 +772,7 @@ model ServiceBooking {
   client     User          @relation("ClientBookings", fields: [clientId], references: [id])
   message    String?       @db.Text
   status     BookingStatus @default(PENDING)
+  payment    ServiceBookingPayment?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 }
@@ -640,26 +820,29 @@ model ProductCategory {
 }
 
 model Store {
-  id          String       @id @default(cuid())
-  ownerId     String       @unique
-  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  name        String
-  description String       @db.Text
-  slug        String       @unique
-  logo        String?
-  banner      String?
-  images      String[]
-  latitude    Float?
-  longitude   Float?
-  address     String?
-  city        String?
-  governorate String?
-  phone       String?
-  status      StoreStatus  @default(ACTIVE)
-  products    Product[]
-  orders      Order[]      @relation("StoreOrders")
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  ownerId         String       @unique
+  owner           User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name            String
+  description     String       @db.Text
+  slug            String       @unique
+  logo            String?
+  banner          String?
+  images          String[]
+  latitude        Float?
+  longitude       Float?
+  address         String?
+  city            String?
+  governorate     String?
+  phone           String?
+  status          StoreStatus  @default(ACTIVE)
+  isHalalCertified  Boolean    @default(false)
+  halalCertBody     String?
+  islamicCategory   String?
+  products        Product[]
+  orders          Order[]      @relation("StoreOrders")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([ownerId])
   @@index([slug])
@@ -724,6 +907,7 @@ model Order {
   shippingGovernorate String?
   notes               String?      @db.Text
   items               OrderItem[]
+  payment             OrderPayment?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 

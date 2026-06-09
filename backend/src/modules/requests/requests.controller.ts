@@ -7,13 +7,24 @@ const p = (req: AuthRequest) => req.params as { id: string };
 
 export const sendRequest = async (req: AuthRequest, res: Response) => {
   try {
-    const { profileId, message } = req.body;
+    const { profileId, brideId, message } = req.body;
+
+    const senderProfile = await prisma.profile.findUnique({
+      where: { userId: req.userId! },
+      select: { displayName: true, status: true },
+    });
+    if (!senderProfile || senderProfile.status !== 'APPROVED') {
+      return res.status(403).json({
+        error: 'PROFILE_REQUIRED',
+        messageAr: 'يجب أن يكون لديك ملف شخصي معتمد لإرسال طلب تواصل',
+        messageEn: 'You must have an approved profile to send a contact request',
+      });
+    }
 
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
       include: { user: true },
     });
-
     if (!profile || profile.status !== 'APPROVED') {
       return res.status(404).json({
         error: 'NOT_FOUND',
@@ -22,10 +33,32 @@ export const sendRequest = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    if (brideId) {
+      const exposure = await prisma.brideExposure.findUnique({
+        where: { brideId_groomId: { brideId, groomId: req.userId! } },
+      });
+      if (!exposure || !exposure.isActive) {
+        return res.status(403).json({
+          error: 'NOT_EXPOSED',
+          messageAr: 'هذا السجل غير متاح لك',
+          messageEn: 'This bride record is not exposed to you',
+        });
+      }
+      const bride = await prisma.bride.findFirst({
+        where: { id: brideId, guardianId: profile.userId },
+      });
+      if (!bride) {
+        return res.status(400).json({
+          error: 'MISMATCH',
+          messageAr: 'السجل لا ينتمي لولي الأمر هذا',
+          messageEn: 'Bride record does not belong to this guardian',
+        });
+      }
+    }
+
     const existing = await prisma.contactRequest.findUnique({
       where: { senderId_profileId: { senderId: req.userId!, profileId } },
     });
-
     if (existing) {
       return res.status(409).json({
         error: 'DUPLICATE_REQUEST',
@@ -34,21 +67,17 @@ export const sendRequest = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const senderProfile = await prisma.profile.findUnique({
-      where: { userId: req.userId! },
-      select: { displayName: true },
-    });
-
     const request = await prisma.contactRequest.create({
       data: {
         senderId: req.userId!,
         profileId,
         receiverId: profile.userId,
+        brideId: brideId || null,
         message,
       },
       include: {
         profile: { select: { displayName: true } },
-        sender: { select: { id: true } },
+        bride: { select: { id: true, age: true, residenceGovernorate: true } },
       },
     });
 
@@ -57,7 +86,7 @@ export const sendRequest = async (req: AuthRequest, res: Response) => {
       data: { requestCount: { increment: 1 } },
     });
 
-    notifyContactRequest(profile.userId, senderProfile?.displayName || 'مستخدم', req.userId);
+    notifyContactRequest(profile.userId, senderProfile.displayName || 'مستخدم', req.userId);
 
     return res.status(201).json(request);
   } catch (error) {
@@ -81,6 +110,7 @@ export const getSentRequests = async (req: AuthRequest, res: Response) => {
             photos: { where: { isPrimary: true }, take: 1 },
           },
         },
+        bride: { select: { id: true, age: true, residenceGovernorate: true } },
         conversation: { select: { id: true } },
       },
       orderBy: { createdAt: 'desc' },

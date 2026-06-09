@@ -53,18 +53,22 @@ export default function Layout() {
       ? [
           { path: '/social', label: 'المنشورات' },
           { path: '/services', label: 'الخدمات' },
+          { path: '/service-requests', label: 'طلبات الخدمة' },
+          { path: '/search', label: 'بحث' },
           { path: '/eshops/products', label: 'المنتجات' },
           { path: '/eshops/stores', label: t('eshops.title') },
           { path: '/eshops/cart', label: 'السلة' },
           { path: '/profile/my', label: t('profile.my') },
           ...(hasGroom ? [
             { path: '/requests', label: t('nav.requests') },
+            { path: '/connections', label: 'جهات الاتصال' },
             { path: '/messages', label: t('nav.messages') },
           ] : []),
           ...(hasGuardian ? [
             { path: '/browse', label: t('nav.browse') },
             { path: '/guardian/brides', label: 'العرائس' },
             { path: '/requests/sent', label: t('nav.requests') },
+            { path: '/connections', label: 'جهات الاتصال' },
             { path: '/messages', label: t('nav.messages') },
           ] : []),
         ]

@@ -27,15 +27,20 @@ import brideRoutes from './modules/brides/brides.routes';
 import serviceRoutes from './modules/services/services.routes';
 import eshopRoutes from './modules/eshops/eshops.routes';
 import logRoutes from './modules/logs/logs.routes';
+import connectionRoutes from './modules/connections/connections.routes';
+import serviceRequestRoutes from './modules/serviceRequests/serviceRequests.routes';
+import searchRoutes from './modules/search/search.routes';
 
 const app = express();
 const httpServer = createServer(app);
 
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(s => s.trim());
+app.set('trust proxy', 1);
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    callback(null, true);
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
 }));
@@ -51,15 +56,16 @@ app.get('/health', (_req, res) => {
 
 app.get('/api/stats', async (_req, res) => {
   try {
-    const [totalUsers, totalProfiles, totalPosts, totalMessages, totalStores, totalOrders] = await Promise.all([
+    const [totalUsers, totalProfiles, totalPosts, totalMessages, totalStores, totalOrders, totalServiceRequests] = await Promise.all([
       prisma.user.count(),
       prisma.profile.count(),
       prisma.post.count(),
       prisma.message.count(),
       prisma.store.count(),
       prisma.order.count(),
+      prisma.serviceRequest.count(),
     ]);
-    res.json({ users: totalUsers, profiles: totalProfiles, posts: totalPosts, messages: totalMessages, businesses: totalStores, orders: totalOrders });
+    res.json({ users: totalUsers, profiles: totalProfiles, posts: totalPosts, messages: totalMessages, businesses: totalStores, orders: totalOrders, serviceRequests: totalServiceRequests });
   } catch {
     res.status(500).json({ error: 'INTERNAL' });
   }
@@ -81,6 +87,9 @@ app.use('/api/brides', brideRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/eshops', eshopRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/connections', connectionRoutes);
+app.use('/api/service-requests', serviceRequestRoutes);
+app.use('/api/search', searchRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'NOT_FOUND', message: 'Route not found' });

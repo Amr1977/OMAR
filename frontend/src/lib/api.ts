@@ -117,6 +117,10 @@ export const api = {
     get: (id: string) => api.get(`/browse/profiles/${id}`),
     aiSuggestions: (params?: string) =>
       api.get(`/browse/ai-suggestions${params ? `?${params}` : ''}`),
+    grooms: (params: any) => {
+      const q = new URLSearchParams(params).toString();
+      return api.get(`/browse/grooms?${q}`);
+    },
   },
 
   // Requests
@@ -135,6 +139,8 @@ export const api = {
     send: (id: string, content: string) =>
       api.post(`/messages/conversations/${id}`, { content }),
     markRead: (id: string) => api.put(`/messages/conversations/${id}/read`),
+    startDirect: (recipientId: string) =>
+      api.post('/messages/direct', { recipientId }),
   },
 
   // Notifications
@@ -277,5 +283,30 @@ export const api = {
     bookings: () => api.get('/services/bookings'),
     updateBooking: (id: string, status: string) => api.put(`/services/bookings/${id}`, { status }),
     addReview: (id: string, rating: number, content?: string) => api.post(`/services/${id}/reviews`, { rating, content }),
+  },
+
+  // Connections
+  connections: {
+    send: (receiverId: string, message?: string) =>
+      api.post('/connections', { receiverId, message }),
+    accept: (id: string) =>
+      api.post(`/connections/${id}/accept`),
+    myConnections: () => api.get('/connections/my'),
+    pending: () => api.get('/connections/pending'),
+  },
+
+  // Service Requests
+  serviceRequests: {
+    browse: (query?: string) => api.get(`/service-requests?${query || ''}`),
+    create: (data: any) =>
+      api.post('/service-requests', data),
+    submitOffer: (id: string, data: any) =>
+      api.post(`/service-requests/${id}/offers`, data),
+  },
+
+  // Search
+  search: {
+    global: (q: string, type?: string) =>
+      api.get(`/search?q=${encodeURIComponent(q)}${type ? `&type=${type}` : ''}`),
   },
 };
