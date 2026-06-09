@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, optionalAuth } from '../../middleware/auth';
 import { uploadMedia, uploadStory } from '../../config/upload';
+import { socialLimiter } from '../../middleware/rateLimiter';
 import {
   createPost, updatePost, getFeed, getPost, deletePost, toggleLike,
   addComment, deleteComment, toggleFollow, getFollowers, getFollowing,
@@ -18,6 +19,7 @@ router.get('/posts/:id', optionalAuth, getPost);
 router.get('/hashtag/:tag', optionalAuth, getHashtagFeed);
 
 router.use(authenticate);
+router.use(socialLimiter);
 
 router.post('/posts/media', uploadMedia.single('media'), uploadPostMedia);
 router.post('/posts', createPost);
