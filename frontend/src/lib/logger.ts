@@ -1,5 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
+const LOGS_BASE = API_BASE.endsWith('/api') ? API_BASE.slice(0, -4) : (API_BASE === '/api' ? '' : API_BASE);
+
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
 interface LogEntry {
@@ -91,19 +93,14 @@ class FrontendLogger {
     if (this.flushing || this.queue.length === 0) return;
     // don't send anonymous logs if backoff active
     const token = this.getToken();
-    if (!token && this.isBackoffActive()) {
-      // skip sending now; schedule retry
-      if (!this.flushing) {
-        setTimeout(() => this.flush(), 60000); // retry after 1 minute
-      }
-      return;
-    }
 
     this.flushing = true;
 
     const batch = this.queue.splice(0);
     try {
-      const url = `${API_BASE}/logs/client`;
+      const url = token
+        ? `${API_BASE}/logs/client`
+        : `${LOGS_BASE}/logs/client/public`;
       const payload = JSON.stringify(batch);
 
       // Try sendBeacon for reliable delivery during unload/navigation

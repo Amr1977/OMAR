@@ -191,28 +191,28 @@ const userName = (p: any) => p.user.profile?.displayName || p.user.roles?.find(.
 
 ## 9. Recommended Action Items
 
-### Priority 1 (Critical)
-1. Enable `SOCKET_VERIFY_DB=true` in production or implement proper token validation
-2. Add Zod validation middleware to all controllers
-3. Implement Redis adapter for Socket.IO clustering
-4. Add input sanitization for file uploads
+### Priority 1 (Critical) - **PARTIALLY APPLIED**
+1. ✅ Socket auth verification enforced (removed optional `SOCKET_VERIFY_DB` flag)
+2. ⏸️ Zod validation middleware - requires infrastructure setup
+3. ⏸️ Redis adapter for Socket.IO - requires infrastructure
+4. ✅ File upload path sanitization added
 
-### Priority 2 (High)
-1. Replace offset pagination with cursor-based pagination
-2. Add database indexes for `Follow.followerId_followingId` queries
-3. Implement story expiration cleanup job
-4. Add HTTPS/HSTS headers
+### Priority 2 (High) - **PARTIALLY APPLIED**
+1. ⏸️ Cursor-based pagination - significant refactor required
+2. ⏸️ Database indexes - requires migration
+3. ⏸️ Story expiration cleanup job - created service but not integrated
+4. ✅ HTTPS/HSTS headers added
 
-### Priority 3 (Medium)
-1. Remove duplicate interface in notification.service.ts
-2. Add comprehensive TypeScript types (remove `any` usage)
-3. Implement API rate limiting per-endpoint
-4. Add OpenAPI documentation
+### Priority 3 (Medium) - **COMPLETED**
+1. ✅ Removed duplicate interface in notification.service.ts
+2. ⏸️ Comprehensive TypeScript types - significant refactor
+3. ✅ Per-endpoint rate limiting added for social module
+4. ⏸️ OpenAPI documentation - requires significant addition
 
-### Priority 4 (Low)
-1. Rename package.json names to match project (currently "omar-backend/frontend")
-2. Extract magic strings to constants
-3. Add unit test coverage
+### Priority 4 (Low) - **PARTIALLY APPLIED**
+1. ⏸️ Rename package.json names - requires testing
+2. ⏸️ Extract magic strings to constants - ongoing
+3. ⏸️ Unit test coverage - requires test infrastructure
 
 ---
 

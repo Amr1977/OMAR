@@ -10,9 +10,14 @@ export default function Requests() {
   const fetchRequests = async () => {
     try {
       const res: any = await api.requests.received();
-      setRequests(res);
-    } catch (err) {
-      console.error(err);
+      if (Array.isArray(res)) {
+        setRequests(res);
+      } else {
+        setRequests([]);
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch requests:', err);
+      setRequests([]);
     } finally {
       setLoading(false);
     }
