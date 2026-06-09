@@ -40,15 +40,6 @@ import ServiceDetail from './pages/services/ServiceDetail';
 import ServiceForm from './pages/services/ServiceForm';
 import MyServices from './pages/services/MyServices';
 import MyBookings from './pages/services/MyBookings';
-import ProductList from './pages/eshops/ProductList';
-import AdminEshops from './pages/admin/AdminEshops';
-import StoreBySlug from './pages/eshops/StoreBySlug';
-import StoreList from './pages/eshops/StoreList';
-import StoreDetail from './pages/eshops/StoreDetail';
-import MyStore from './pages/eshops/MyStore';
-import Cart from './pages/eshops/Cart';
-import MyOrders from './pages/eshops/MyOrders';
-import StoreOrders from './pages/eshops/StoreOrders';
 import Search from './pages/Search';
 import ConnectionRequests from './pages/connections/ConnectionRequests';
 import ServiceRequests from './pages/serviceRequests/ServiceRequests';
@@ -125,7 +116,6 @@ export default function App() {
         <Route path="admin/messages" element={<ProtectedRoute roles={['ADMIN']}><AdminMessages /></ProtectedRoute>} />
         <Route path="admin/feedback" element={<ProtectedRoute roles={['ADMIN']}><AdminFeedback /></ProtectedRoute>} />
         <Route path="admin/subscriptions" element={<ProtectedRoute roles={['ADMIN']}><AdminSubscriptions /></ProtectedRoute>} />
-        <Route path="admin/eshops" element={<ProtectedRoute roles={['ADMIN']}><AdminEshops /></ProtectedRoute>} />
         <Route path="donate" element={<ProtectedRoute><Donate /></ProtectedRoute>} />
         <Route path="guardian/brides" element={<ProtectedRoute roles={['GUARDIAN', 'ADMIN']}><BrideList /></ProtectedRoute>} />
         <Route path="guardian/brides/new" element={<ProtectedRoute roles={['GUARDIAN', 'ADMIN']}><BrideForm /></ProtectedRoute>} />
@@ -136,14 +126,6 @@ export default function App() {
         <Route path="services/:id/edit" element={<ProtectedRoute><ServiceForm /></ProtectedRoute>} />
         <Route path="my/services" element={<ProtectedRoute><MyServices /></ProtectedRoute>} />
         <Route path="my/bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
-        <Route path="eshops/products" element={<ProtectedRoute><ProductList /></ProtectedRoute>} />
-        <Route path="eshops/stores" element={<ProtectedRoute><StoreList /></ProtectedRoute>} />
-        <Route path="eshops/s/:slug" element={<StoreBySlug />} />
-        <Route path="eshops/stores/:id" element={<StoreDetail />} />
-        <Route path="eshops/my-store" element={<ProtectedRoute><MyStore /></ProtectedRoute>} />
-        <Route path="eshops/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-        <Route path="eshops/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-        <Route path="eshops/orders/store" element={<ProtectedRoute><StoreOrders /></ProtectedRoute>} />
         <Route path="search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
         <Route path="connections" element={<ProtectedRoute><ConnectionRequests /></ProtectedRoute>} />
         <Route path="service-requests" element={<ProtectedRoute><ServiceRequests /></ProtectedRoute>} />

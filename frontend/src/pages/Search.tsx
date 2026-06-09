@@ -6,7 +6,6 @@ const TABS = [
   { key: '', label: 'الكل' },
   { key: 'profiles', label: 'حسابات' },
   { key: 'services', label: 'خدمات' },
-  { key: 'stores', label: 'متاجر' },
   { key: 'posts', label: 'منشورات' },
   { key: 'serviceRequests', label: 'طلبات خدمة' },
 ];
@@ -101,22 +100,6 @@ export default function Search() {
               >
                 <p className="font-medium text-[#1B4332] dark:text-gray-200">{s.title}</p>
                 <p className="text-sm text-[#6B7280]">{s.category?.nameAr || ''}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {!loading && results.stores?.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-[#1B4332] dark:text-[#DAA520] mb-3">متاجر</h2>
-          <div className="space-y-2">
-            {results.stores.map((s: any) => (
-              <Link key={s.id} to={`/eshops/stores/${s.id}`}
-                className="block bg-white dark:bg-gray-800 p-4 rounded-xl border border-[#E5E7EB] dark:border-gray-700 hover:border-[#1B4332] dark:hover:border-[#DAA520] transition-colors"
-              >
-                <p className="font-medium text-[#1B4332] dark:text-gray-200">{s.name}</p>
-                <p className="text-sm text-[#6B7280]">{s.description?.slice(0, 100)}</p>
               </Link>
             ))}
           </div>

@@ -239,35 +239,6 @@ export const api = {
     visible: (params?: string) => api.get(`/brides/visible${params ? `?${params}` : ''}`),
   },
 
-  // E-shops
-  eshops: {
-    productCategories: () => api.get('/eshops/product-categories'),
-    createStore: (data: any) => api.post('/eshops/stores', data),
-    getMyStore: () => api.get('/eshops/stores/my'),
-    listStores: (params?: string) => api.get(`/eshops/stores${params ? `?${params}` : ''}`),
-    getStore: (id: string) => api.get(`/eshops/stores/${id}`),
-    getStoreBySlug: (slug: string) => api.get(`/eshops/stores/slug/${slug}`),
-    updateStore: (id: string, data: any) => api.put(`/eshops/stores/${id}`, data),
-    uploadStoreImage: (id: string, formData: FormData) => api.upload(`/eshops/stores/${id}/images`, formData),
-    deleteStoreImage: (id: string, url: string) => api.deleteBody(`/eshops/stores/${id}/images`, { url }),
-    createProduct: (storeId: string, data: any) => api.post(`/eshops/stores/${storeId}/products`, data),
-    updateProduct: (id: string, data: any) => api.put(`/eshops/products/${id}`, data),
-    deleteProduct: (id: string) => api.delete(`/eshops/products/${id}`),
-    listProducts: (params?: string) => api.get(`/eshops/products${params ? `?${params}` : ''}`),
-    getProduct: (id: string) => api.get(`/eshops/products/${id}`),
-    uploadProductImage: (id: string, formData: FormData) => api.upload(`/eshops/products/${id}/images`, formData),
-    deleteProductImage: (id: string, url: string) => api.deleteBody(`/eshops/products/${id}/images`, { url }),
-    getCart: () => api.get('/eshops/cart'),
-    addToCart: (productId: string, quantity?: number) => api.post('/eshops/cart', { productId, quantity }),
-    updateCartItem: (id: string, quantity: number) => api.put(`/eshops/cart/items/${id}`, { quantity }),
-    removeFromCart: (id: string) => api.delete(`/eshops/cart/items/${id}`),
-    checkout: (data: any) => api.post('/eshops/orders', data),
-    getMyOrders: () => api.get('/eshops/orders'),
-    getStoreOrders: () => api.get('/eshops/orders/store'),
-    getOrder: (id: string) => api.get(`/eshops/orders/${id}`),
-    updateOrderStatus: (id: string, status: string) => api.put(`/eshops/orders/${id}/status`, { status }),
-  },
-
   // Services
   services: {
     categories: () => api.get('/services/categories'),

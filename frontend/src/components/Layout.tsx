@@ -55,9 +55,7 @@ export default function Layout() {
           { path: '/services', label: 'الخدمات' },
           { path: '/service-requests', label: 'طلبات الخدمة' },
           { path: '/search', label: 'بحث' },
-          { path: '/eshops/products', label: 'المنتجات' },
-          { path: '/eshops/stores', label: t('eshops.title') },
-          { path: '/eshops/cart', label: 'السلة' },
+          { href: 'https://shop.et3am.com', label: 'المتجر', external: true },
           { path: '/profile/my', label: t('profile.my') },
           ...(hasGroom ? [
             { path: '/requests', label: t('nav.requests') },
@@ -84,7 +82,7 @@ export default function Layout() {
           { path: '/admin/feedback', label: 'الملاحظات' },
           { path: '/admin/subscriptions', label: 'الاشتراكات' },
           { path: '/admin/donations', label: 'التبرعات' },
-          { path: '/admin/eshops', label: 'المتاجر' },
+          { href: 'https://shop.et3am.com', label: 'المتاجر', external: true },
         ]
       : []),
     ...(isAuthenticated
@@ -263,23 +261,44 @@ export default function Layout() {
 
             {/* Nav links - scrollable */}
             <div className="flex-1 overflow-y-auto p-3 space-y-0.5 scrollbar-thin">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={close}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
-                    isActive(link.path)
-                      ? 'bg-[var(--color-primary-pale)] text-[var(--color-primary)] shadow-sm'
-                      : 'text-[var(--color-text)] hover:bg-gray-50 dark:hover:bg-gray-700 hover:translate-x-1'
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full shrink-0 transition-all duration-150 ${
-                    isActive(link.path) ? 'bg-[var(--color-primary)] scale-110' : 'bg-transparent'
-                  }`} />
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                if ((link as any).external) {
+                  return (
+                    <a
+                      key={(link as any).href}
+                      href={(link as any).href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={close}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--color-text)] hover:bg-gray-50 dark:hover:bg-gray-700 hover:translate-x-1 transition-all duration-150"
+                    >
+                      <span className="w-2 h-2 rounded-full shrink-0 bg-transparent" />
+                      {link.label}
+                      <svg className="w-3.5 h-3.5 mr-auto text-[var(--color-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  );
+                }
+                const p = link.path!;
+                return (
+                  <Link
+                    key={p}
+                    to={p}
+                    onClick={close}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
+                      isActive(p)
+                        ? 'bg-[var(--color-primary-pale)] text-[var(--color-primary)] shadow-sm'
+                        : 'text-[var(--color-text)] hover:bg-gray-50 dark:hover:bg-gray-700 hover:translate-x-1'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full shrink-0 transition-all duration-150 ${
+                      isActive(p) ? 'bg-[var(--color-primary)] scale-110' : 'bg-transparent'
+                    }`} />
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Bottom actions */}
