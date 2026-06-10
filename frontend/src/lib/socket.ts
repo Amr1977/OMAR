@@ -2,24 +2,17 @@ import { io, Socket } from 'socket.io-client';
 import { getToken } from './api';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
-// Derive socket base and path robustly from API_URL so clients behind subpath proxies
-// (e.g., /hafsa/api) connect to the correct upgrade endpoint (/hafsa/socket.io)
-const SOCKET_URL = API_URL.replace(/\/api\/?$/, '') || '';
-let SOCKET_PATH = '/socket.io';
-try {
-  if (SOCKET_URL) {
-    const u = SOCKET_URL.match(/^https?:\/\/(.+?)(\/.*)?$/);
-    if (u && u[2]) {
-      // URL already has a path prefix (e.g. /hafsa). socket.io-client appends
-      // path to the URL, so keep it as /socket.io — no prefix duplication needed.
-      SOCKET_PATH = '/socket.io';
-    } else if (SOCKET_URL.startsWith('/')) {
-      SOCKET_PATH = (SOCKET_URL.endsWith('/') ? SOCKET_URL.slice(0, -1) : SOCKET_URL) + '/socket.io';
-    }
-  }
-} catch (e) {
-  SOCKET_PATH = '/socket.io';
-}
+// socket.io-client uses the URL's pathname as the namespace (e.g., /hafsa).
+// We must pass only the origin — no path — so the namespace defaults to "/".
+const SOCKET_URL = (() => {
+  // This code runs in browser context, so new URL(absolute) always works.
+  // For relative API_URL (dev proxy), fall back to empty string (same-origin).
+  try { return new URL(API_URL).origin; } catch { return ''; }
+})();
+// Path is always /socket.io. When SOCKET_URL is absolute, nginx handles
+// proxying via the dedicated /socket.io/ location. When empty (same-origin
+// dev), Vite's proxy or the dev server handles it.
+const SOCKET_PATH = '/socket.io';
 
 let socket: Socket | null = null;
 let notificationHandler: ((notification: any) => void) | null = null;
