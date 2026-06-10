@@ -14,6 +14,9 @@ import AiSuggestions from './pages/browse/AiSuggestions';
 import GroomBrowseBrides from './pages/browse/GroomBrowseBrides';
 import Requests from './pages/Requests';
 import SentRequests from './pages/SentRequests';
+import GroomInbox from './pages/GroomInbox';
+import GuardianDashboard from './pages/GuardianDashboard';
+import GroomDashboard from './pages/GroomDashboard';
 import Messages from './pages/messages/Messages';
 import Conversation from './pages/messages/Conversation';
 import Notifications from './pages/Notifications';
@@ -102,6 +105,9 @@ export default function App() {
         <Route path="ai-suggestions" element={<ProtectedRoute roles={['GUARDIAN', 'ADMIN']}><AiSuggestions /></ProtectedRoute>} />
         <Route path="requests" element={<ProtectedRoute roles={['GROOM', 'ADMIN']}><Requests /></ProtectedRoute>} />
         <Route path="requests/sent" element={<ProtectedRoute roles={['GUARDIAN', 'ADMIN']}><SentRequests /></ProtectedRoute>} />
+        <Route path="groom-inbox" element={<ProtectedRoute roles={['GROOM', 'ADMIN']}><GroomInbox /></ProtectedRoute>} />
+        <Route path="guardian-dashboard" element={<ProtectedRoute roles={['GUARDIAN', 'ADMIN']}><GuardianDashboard /></ProtectedRoute>} />
+        <Route path="groom-dashboard" element={<ProtectedRoute roles={['GROOM', 'ADMIN']}><GroomDashboard /></ProtectedRoute>} />
         <Route path="brides/visible" element={<ProtectedRoute roles={['GROOM', 'ADMIN']}><GroomBrowseBrides /></ProtectedRoute>} />
         <Route path="messages" element={<ProtectedRoute roles={['GROOM', 'GUARDIAN', 'ADMIN']}><Messages /></ProtectedRoute>} />
         <Route path="messages/:id" element={<ProtectedRoute roles={['GROOM', 'GUARDIAN', 'ADMIN']}><Conversation /></ProtectedRoute>} />

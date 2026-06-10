@@ -301,6 +301,8 @@ model ContactRequest {
   bride        Bride?   @relation(fields: [brideId], references: [id], onDelete: SetNull)
   status       String   @default("PENDING")
   message      String?  @db.Text
+  initiatedBy  String   @default("GROOM")
+  guardianNote String?  @db.Text
   conversation Conversation?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

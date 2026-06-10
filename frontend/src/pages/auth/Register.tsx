@@ -48,7 +48,15 @@ export default function Register() {
       localStorage.setItem('auth_token', result.accessToken);
       const user = await api.auth.getMe();
       login(result.accessToken, user);
-      navigate(user.roles.length > 1 ? '/profile/setup' : '/social');
+      const hasGroom = (user.roles as string[]).includes('GROOM');
+      const hasGuardian = (user.roles as string[]).includes('GUARDIAN');
+      if (hasGroom) {
+        navigate('/profile/setup');
+      } else if (hasGuardian) {
+        navigate('/guardian/brides/new?onboarding=1');
+      } else {
+        navigate('/social');
+      }
     } catch (err: any) {
       const msg = err.code === 'auth/email-already-in-use'
         ? 'هذا البريد مسجل بالفعل'
@@ -71,7 +79,15 @@ export default function Register() {
     setError('');
     try {
       const userData = await signInWithGoogle(form.roles);
-      navigate(userData.roles.length > 1 ? '/profile/setup' : '/social');
+      const hasGroom = (userData.roles as string[]).includes('GROOM');
+      const hasGuardian = (userData.roles as string[]).includes('GUARDIAN');
+      if (hasGroom) {
+        navigate('/profile/setup');
+      } else if (hasGuardian) {
+        navigate('/guardian/brides/new?onboarding=1');
+      } else {
+        navigate('/social');
+      }
     } catch (err: any) {
       setError(err.message || 'فشل التسجيل عبر Google');
     } finally {

@@ -59,15 +59,16 @@ export default function Layout() {
           { href: 'https://shop.et3am.com', label: 'المتجر', external: true },
           { path: '/profile/my', label: t('profile.my') },
           ...(hasGroom ? [
-            { path: '/requests', label: t('nav.requests') },
-            { path: '/connections', label: 'جهات الاتصال' },
+            { path: '/groom-dashboard', label: 'لوحة التحكم' },
+            { path: '/brides/visible', label: 'السجلات المتاحة' },
+            { path: '/groom-inbox', label: 'صندوق التعارف' },
             { path: '/messages', label: t('nav.messages') },
           ] : []),
           ...(hasGuardian ? [
+            { path: '/guardian-dashboard', label: 'لوحة التحكم' },
+            { path: '/guardian/brides', label: 'سجلاتي' },
             { path: '/browse', label: t('nav.browse') },
-            { path: '/guardian/brides', label: 'العرائس' },
-            { path: '/requests/sent', label: t('nav.requests') },
-            { path: '/connections', label: 'جهات الاتصال' },
+            { path: '/requests', label: 'الطلبات الواردة' },
             { path: '/messages', label: t('nav.messages') },
           ] : []),
         ]

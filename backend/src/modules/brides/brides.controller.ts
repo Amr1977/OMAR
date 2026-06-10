@@ -274,12 +274,37 @@ export const getVisibleBrides = async (req: AuthRequest, res: Response) => {
         skip,
         take: limitNum,
         orderBy,
+        include: {
+          guardian: {
+            select: {
+              id: true,
+              profile: { select: { id: true, displayName: true } },
+            },
+          },
+          exposures: {
+            where: { groomId, isActive: true },
+            select: { exposedAt: true },
+            take: 1,
+          },
+          contactRequests: {
+            where: { senderId: groomId },
+            select: { id: true, status: true },
+            take: 1,
+          },
+        },
       }),
       prisma.bride.count({ where }),
     ]);
 
+    const enriched = brides.map(b => ({
+      ...b,
+      guardianProfileId: (b as any).guardian?.profile?.id || null,
+      requestStatus: (b as any).contactRequests?.[0]?.status || null,
+      exposedAt: (b as any).exposures?.[0]?.exposedAt || null,
+    }));
+
     return res.json({
-      brides,
+      brides: enriched,
       pagination: {
         page: pageNum,
         limit: limitNum,

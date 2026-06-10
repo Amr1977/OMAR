@@ -133,6 +133,11 @@ export const api = {
     received: () => api.get('/requests/received'),
     accept: (id: string) => api.put(`/requests/${id}/accept`),
     reject: (id: string) => api.put(`/requests/${id}/reject`),
+    groomInbox: () => api.get('/requests/groom-inbox'),
+    guardianDashboard: () => api.get('/requests/guardian-dashboard'),
+    groomDashboard: () => api.get('/requests/groom-dashboard'),
+    guardianPropose: (data: any) => api.post('/requests/guardian-propose', data),
+    marriageSuccess: (data: any) => api.post('/requests/marriage-success', data),
   },
 
   // Messages

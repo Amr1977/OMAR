@@ -22,6 +22,30 @@ export default function GroomBrowseBrides() {
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [selectedBride, setSelectedBride] = useState<any>(null);
+  const [sendingRequest, setSendingRequest] = useState(false);
+  const [requestSent, setRequestSent] = useState<string | null>(null);
+  const [requestMessage, setRequestMessage] = useState('');
+
+  const handleSendRequest = async (bride: any) => {
+    if (!bride.guardianProfileId) {
+      alert('لا يمكن إرسال الطلب — ملف ولي الأمر غير متاح');
+      return;
+    }
+    setSendingRequest(true);
+    try {
+      await api.requests.send({
+        profileId: bride.guardianProfileId,
+        brideId: bride.id,
+        message: requestMessage.trim() || undefined,
+      });
+      setRequestSent(bride.id);
+      setRequestMessage('');
+    } catch (err: any) {
+      alert(err.message || 'فشل إرسال الطلب');
+    } finally {
+      setSendingRequest(false);
+    }
+  };
 
   const buildQuery = useCallback((page: number) => {
     const params = new URLSearchParams();
@@ -276,6 +300,42 @@ export default function GroomBrowseBrides() {
                 <Section title="ملاحظات">
                   <p className="text-sm text-[#1B4332] dark:text-gray-200 whitespace-pre-wrap">{selectedBride.notes}</p>
                 </Section>
+              )}
+            </div>
+
+            {/* Send Contact Request */}
+            <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+              {requestSent === selectedBride?.id ? (
+                <div className="text-center py-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                  <p className="text-green-700 dark:text-green-400 font-medium text-sm">✓ تم إرسال طلب التواصل</p>
+                  <p className="text-xs text-[#6B7280] mt-1">سيتواصل معك ولي الأمر إذا قبل الطلب</p>
+                </div>
+              ) : selectedBride?.requestStatus ? (
+                <div className="text-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                  <p className="text-blue-700 dark:text-blue-400 text-sm">
+                    {selectedBride.requestStatus === 'PENDING' ? 'طلبك قيد المراجعة' :
+                     selectedBride.requestStatus === 'ACCEPTED' ? '✓ تم قبول طلبك' :
+                     'تم رفض طلبك'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-[#1B4332] dark:text-gray-200 mb-2">أرسل طلب تواصل لولي الأمر</p>
+                  <textarea
+                    value={requestMessage}
+                    onChange={e => setRequestMessage(e.target.value)}
+                    placeholder="تعريف موجز بنفسك (اختياري)..."
+                    rows={3}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm resize-none focus:outline-none focus:border-[#DAA520] mb-3"
+                  />
+                  <button
+                    onClick={() => handleSendRequest(selectedBride)}
+                    disabled={sendingRequest || !selectedBride?.guardianProfileId}
+                    className="w-full py-3 bg-[#1B4332] dark:bg-[#DAA520] text-white dark:text-[#1B4332] rounded-xl text-sm font-bold hover:bg-[#2D6A4F] disabled:opacity-50 transition-colors"
+                  >
+                    {sendingRequest ? 'جاري الإرسال...' : 'إرسال طلب التواصل'}
+                  </button>
+                </>
               )}
             </div>
           </div>
