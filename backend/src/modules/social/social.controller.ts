@@ -247,15 +247,7 @@ export const getPost = async (req: AuthRequest, res: Response) => {
   try {
     const post = await prisma.post.findUnique({
       where: { id: id(req) },
-      include: {
-        user: { select: { id: true, roles: true, subscriptionPlan: true, isOnline: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
-        _count: { select: { likes: true, comments: true, saves: true } },
-        ...(req.userId ? {
-          likes: { where: { userId: req.userId }, take: 1 },
-          saves: { where: { userId: req.userId }, take: 1 },
-        } : {}),
-        hashtags: { include: { hashtag: { select: { tag: true } } } },
-      },
+      include: postIncludeFull(req.userId || ''),
     });
     if (!post) return res.status(404).json({ error: 'NOT_FOUND', message: 'Post not found' });
     if (!(await canView(post, req.userId))) {
