@@ -156,8 +156,8 @@ The version is displayed in the application footer and synced to `frontend/packa
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/Amr1977/HAFSA.git
-cd HAFSA
+git clone https://github.com/Amr1977/OMAR.git
+cd OMAR
 
 # Install backend dependencies
 cd backend && npm install
