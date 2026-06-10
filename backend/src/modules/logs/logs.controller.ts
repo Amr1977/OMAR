@@ -83,7 +83,6 @@ export const ingestClientLogPublic = async (req: Request, res: Response) => {
         stack,
       };
 
-      // Only accept warn/error/info from anonymous clients to reduce noise
       switch (level) {
         case 'error':
           logger.error(`[CLIENT][ANON] ${message}`, logEntry);
@@ -95,8 +94,7 @@ export const ingestClientLogPublic = async (req: Request, res: Response) => {
           logger.info(`[CLIENT][ANON] ${message}`, logEntry);
           break;
         default:
-          // ignore debug-level anonymous logs
-          logger.debug && logger.debug(`[CLIENT][ANON][IGNORED] ${message}`, logEntry);
+          logger.debug(`[CLIENT][ANON] ${message}`, logEntry);
       }
     }
 
