@@ -131,6 +131,7 @@ model User {
   bio               String?          @db.Text
   tagline           String?
   websiteUrl        String?
+  avatarUrl         String?
   lastSeenAt        DateTime?
   isOnline          Boolean          @default(false)
   createdAt         DateTime         @default(now())

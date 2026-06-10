@@ -56,6 +56,16 @@ export const uploadStory = multer({
   },
 });
 
+export const uploadAvatar = multer({
+  storage: makeStorage('avatars'),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
+  },
+});
+
 export const uploadServiceImage = multer({
   storage: makeStorage('services'),
   limits: { fileSize: 5 * 1024 * 1024 },

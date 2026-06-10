@@ -16,6 +16,7 @@ interface User {
   isBanned: boolean;
   hasProfile: boolean;
   profileId?: string;
+  avatarUrl?: string | null;
   profilePhoto?: string | null;
 }
 

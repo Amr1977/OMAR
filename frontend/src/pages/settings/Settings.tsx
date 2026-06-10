@@ -23,6 +23,9 @@ export default function Settings() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deletingAvatar, setDeletingAvatar] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api.profile.getMy()
@@ -119,6 +122,43 @@ export default function Settings() {
       showMsg('error', err.message || 'فشل تغيير الحالة');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showMsg('error', 'حجم الصورة يجب أن لا يتجاوز 5 ميجابايت');
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const fd = new FormData();
+      fd.append('avatar', file);
+      const { avatarUrl } = await api.auth.uploadAvatar(fd);
+      const store = useAuthStore.getState();
+      store.setUser({ ...store.user!, avatarUrl, profilePhoto: avatarUrl || store.user!.profilePhoto });
+      showMsg('success', 'تم تحديث الصورة الشخصية');
+    } catch (err: any) {
+      showMsg('error', err.message || 'فشل رفع الصورة');
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarFileInputRef.current) avatarFileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    setDeletingAvatar(true);
+    try {
+      await api.auth.deleteAvatar();
+      const store = useAuthStore.getState();
+      store.setUser({ ...store.user!, avatarUrl: null, profilePhoto: store.user!.profilePhoto });
+      showMsg('success', 'تم حذف الصورة الشخصية');
+    } catch (err: any) {
+      showMsg('error', err.message || 'فشل حذف الصورة');
+    } finally {
+      setDeletingAvatar(false);
     }
   };
 
@@ -262,6 +302,55 @@ export default function Settings() {
       )}
 
       <div className="space-y-2">
+
+        {/* Account Avatar */}
+        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)]">
+                  {user?.avatarUrl ? (
+                    <img src={photoUrl(user.avatarUrl)} alt="" className="w-full h-full object-cover" />
+                  ) : user?.profilePhoto ? (
+                    <img src={photoUrl(user.profilePhoto)} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[var(--color-muted)]">
+                      <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold text-[var(--color-text)] text-sm">{'الصورة الشخصية للحساب'}</p>
+                  <p className="text-xs text-[var(--color-muted)]">{'تظهر في المنشورات والتعليقات'}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <label className="px-3 py-1.5 bg-[var(--color-primary)] text-white rounded-lg text-xs cursor-pointer hover:opacity-90 transition-opacity">
+                  {uploadingAvatar ? '...' : 'تغيير'}
+                  <input
+                    ref={avatarFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleUploadAvatar}
+                    disabled={uploadingAvatar}
+                  />
+                </label>
+                {user?.avatarUrl && (
+                  <button
+                    onClick={handleDeleteAvatar}
+                    disabled={deletingAvatar}
+                    className="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg text-xs hover:bg-red-50 transition-colors disabled:opacity-50"
+                  >
+                    {deletingAvatar ? '...' : 'حذف'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Language */}
         <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">

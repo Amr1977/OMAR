@@ -96,6 +96,8 @@ export const api = {
     refreshToken: (refreshToken: string) => api.post('/auth/refresh-token', { refreshToken }),
     logout: () => api.post('/auth/logout'),
     updateRoles: (roles: string[]) => api.put('/auth/roles', { roles }),
+    uploadAvatar: (formData: FormData) => api.upload('/auth/avatar', formData),
+    deleteAvatar: () => api.delete('/auth/avatar'),
   },
 
   // Profile

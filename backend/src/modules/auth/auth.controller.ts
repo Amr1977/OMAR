@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import path from 'path';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
+import { uploadAvatar, deleteFile } from '../../config/upload';
 import { createNotification } from '../../services/notification.service';
 
 const generateTokens = (userId: string) => {
@@ -26,6 +28,7 @@ const formatUser = (user: any) => ({
   subscriptionPlan: user.subscriptionPlan,
   subscriptionExpiry: user.subscriptionExpiry ?? null,
   language: user.language,
+  avatarUrl: user.avatarUrl ?? null,
 });
 
 export const register = async (req: Request, res: Response) => {
@@ -179,6 +182,51 @@ export const logout = async (_req: AuthRequest, res: Response) => {
   return res.json({ message: 'Logged out successfully' });
 };
 
+export const updateAvatar = async (req: AuthRequest, res: Response) => {
+  try {
+    uploadAvatar.single('avatar')(req, res, async (err) => {
+      if (err) {
+        const msg = err instanceof Error ? err.message : 'Upload failed';
+        return res.status(400).json({ error: 'UPLOAD_FAILED', message: msg });
+      }
+      if (!req.file) {
+        return res.status(400).json({ error: 'NO_FILE', message: 'No file provided' });
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { avatarUrl: true } });
+      if (user?.avatarUrl) deleteFile(user.avatarUrl);
+
+      const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+      const updated = await prisma.user.update({
+        where: { id: req.userId },
+        data: { avatarUrl },
+      });
+
+      return res.json({ avatarUrl: updated.avatarUrl });
+    });
+  } catch (error) {
+    console.error('Update avatar error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to update avatar' });
+  }
+};
+
+export const deleteAvatar = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { avatarUrl: true } });
+    if (user?.avatarUrl) {
+      deleteFile(user.avatarUrl);
+      await prisma.user.update({
+        where: { id: req.userId },
+        data: { avatarUrl: null },
+      });
+    }
+    return res.json({ message: 'Avatar removed' });
+  } catch (error) {
+    console.error('Delete avatar error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to delete avatar' });
+  }
+};
+
 export const getMe = async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
@@ -187,7 +235,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
         id: true, firebaseUid: true, phone: true, email: true, roles: true,
         isVerified: true, subscriptionPlan: true, subscriptionExpiry: true,
         language: true, isActive: true, isBanned: true, bio: true, tagline: true,
-        websiteUrl: true, isOnline: true, createdAt: true,
+        websiteUrl: true, avatarUrl: true, isOnline: true, createdAt: true,
         profile: { include: { photos: { orderBy: { order: 'asc' }, take: 1 } } },
       },
     });
@@ -210,7 +258,8 @@ export const getMe = async (req: AuthRequest, res: Response) => {
       isBanned: user.isBanned,
       hasProfile: !!user.profile,
       profileId: user.profile?.id,
-      profilePhoto: user.profile?.photos?.[0]?.url || null,
+      avatarUrl: user.avatarUrl ?? null,
+      profilePhoto: user.avatarUrl || user.profile?.photos?.[0]?.url || null,
       bio: user.bio,
       tagline: user.tagline,
       websiteUrl: user.websiteUrl,
