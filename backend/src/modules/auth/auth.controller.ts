@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
+import { createNotification } from '../../services/notification.service';
 
 const generateTokens = (userId: string) => {
   const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
@@ -56,6 +57,27 @@ export const register = async (req: Request, res: Response) => {
           language: language || 'ar',
         },
       });
+
+      const newUser = user;
+      prisma.user.findMany({
+        where: { roles: { array_contains: 'ADMIN' }, isActive: true },
+        select: { id: true },
+      }).then(admins => {
+        if (admins.length === 0) return;
+        const identifier = newUser.phone || newUser.email || 'مستخدم جديد';
+        const rolesStr = (newUser.roles as string[]).filter(r => r !== 'SOCIAL').join(', ') || 'تواصل اجتماعي';
+        Promise.all(admins.map(admin =>
+          createNotification({
+            userId: admin.id,
+            type: 'new_user_signup',
+            titleAr: 'مستخدم جديد',
+            titleEn: 'New User Signup',
+            bodyAr: `مستخدم جديد: ${identifier} — الأدوار: ${rolesStr}`,
+            bodyEn: `New user: ${identifier} — Roles: ${rolesStr}`,
+            data: { userId: newUser.id, phone: newUser.phone, email: newUser.email, roles: newUser.roles },
+          })
+        ));
+      }).catch(() => {});
     } else if (user.firebaseUid !== firebaseUid) {
       await prisma.user.update({
         where: { id: user.id },
