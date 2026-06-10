@@ -26,7 +26,8 @@ export const clientPublicLimiter = rateLimit({
 
 export const ingestClientLog = async (req: AuthRequest, res: Response) => {
   try {
-    const payload = req.body;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const payload = body;
     const entries = Array.isArray(payload) ? payload : [payload];
 
     for (const entry of entries) {
@@ -66,7 +67,8 @@ export const ingestClientLog = async (req: AuthRequest, res: Response) => {
 // Public ingestion endpoint handler — accepts anonymous logs but tags userId as 'anonymous'
 export const ingestClientLogPublic = async (req: Request, res: Response) => {
   try {
-    const payload = req.body;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const payload = body;
     const entries = Array.isArray(payload) ? payload : [payload];
 
     for (const entry of entries) {

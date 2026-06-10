@@ -32,8 +32,7 @@ class FrontendLogger {
         const payload = JSON.stringify(batch);
         const url = this.getToken() ? LOGS_AUTH : LOGS_PUBLIC;
         if (navigator && typeof (navigator as any).sendBeacon === 'function') {
-          const blob = new Blob([payload], { type: 'application/json' });
-          (navigator as any).sendBeacon(url, blob);
+          (navigator as any).sendBeacon(url, payload);
         }
       } catch (e) {
         // swallow - best-effort
@@ -106,10 +105,10 @@ class FrontendLogger {
       const payload = JSON.stringify(batch);
 
       // Try sendBeacon for reliable delivery during unload/navigation
+      // Use raw string (text/plain) to avoid CORS preflight for cross-origin requests
       if (typeof (navigator as any)?.sendBeacon === 'function') {
         try {
-          const blob = new Blob([payload], { type: 'application/json' });
-          const ok = (navigator as any).sendBeacon(url, blob);
+          const ok = (navigator as any).sendBeacon(url, payload);
           if (ok) return;
         } catch (e) {
           // ignore and fallback to fetch
