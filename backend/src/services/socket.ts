@@ -5,6 +5,18 @@ import { prisma } from '../config/database';
 
 let io: Server;
 
+const notifyFollowers = async (userId: string, event: string, data: any) => {
+  try {
+    const followers = await prisma.follow.findMany({
+      where: { followingId: userId },
+      select: { followerId: true },
+    });
+    followers.forEach(f => {
+      io.to(`user:${f.followerId}`).emit(event, data);
+    });
+  } catch {}
+};
+
 export const setupSocket = (httpServer: HttpServer) => {
   const frontendUrl = process.env.FRONTEND_URL;
   const allowedOrigins = frontendUrl
@@ -176,16 +188,20 @@ const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
     socket.on('disconnect', async () => {
       try {
         await prisma.user.update({ where: { id: userId }, data: { isOnline: false, lastSeenAt: new Date() } });
-        io.emit('user_offline', { userId, lastSeenAt: new Date() });
-      } catch {}
+        notifyFollowers(userId, 'user_offline', { userId, lastSeenAt: new Date() });
+      } catch (err) {
+        console.error(`[SOCKET] Failed to set offline status for userId=${userId}:`, err);
+      }
       console.log(`User disconnected: ${userId}`);
     });
 
     (async () => {
       try {
         await prisma.user.update({ where: { id: userId }, data: { isOnline: true, lastSeenAt: new Date() } });
-        io.emit('user_online', { userId });
-      } catch {}
+        notifyFollowers(userId, 'user_online', { userId });
+      } catch (err) {
+        console.error(`[SOCKET] Failed to set online status for userId=${userId}:`, err);
+      }
     })();
   });
 

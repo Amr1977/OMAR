@@ -241,7 +241,7 @@ export default function PostDetail() {
             </div>
           ) : (
             <>
-              <p className="text-sm text-[var(--color-text)] leading-relaxed mb-4 whitespace-pre-wrap">{renderRichText(post.content)}</p>
+              <p className="text-sm text-[var(--color-text)] leading-relaxed mb-4 whitespace-pre-wrap">{renderRichText(post.content, post.mentions)}</p>
               {post.mediaUrls?.length > 0 && (
                 <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
                   {post.mediaUrls.map((url: string, i: number) => (

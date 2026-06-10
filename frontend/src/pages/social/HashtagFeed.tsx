@@ -20,7 +20,7 @@ export default function HashtagFeed() {
     <div className="max-w-2xl mx-auto">
       <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 mb-6">
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">#{tag}</h1>
-        {data?.hashtag && <p className="text-sm text-[var(--color-muted)] mt-1">{data.hashtag.postCount} منشور</p>}
+        {data && <p className="text-sm text-[var(--color-muted)] mt-1">{data.hashtag?.postCount ?? 0} منشور</p>}
       </div>
       <div className="space-y-4">
         {(data?.posts || []).map((post: any) => (

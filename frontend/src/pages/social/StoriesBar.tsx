@@ -7,6 +7,7 @@ export default function StoriesBar() {
   const { user } = useAuthStore();
   const [groups, setGroups] = useState<any[]>([]);
   const [activeGroup, setActiveGroup] = useState<any | null>(null);
+  const [uploadError, setUploadError] = useState('');
   const [activeStoryIdx, setActiveStoryIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const progressRef = useRef<any>(null);
@@ -57,8 +58,9 @@ export default function StoriesBar() {
       await api.social.createStory({ mediaUrl: url, mediaType, privacy: 'FOLLOWERS' });
       const updated = await api.social.getStoriesFeed();
       setGroups(updated);
-    } catch (err) {
-      console.error('Story upload failed:', err);
+    } catch (err: any) {
+      setUploadError(err.message || 'فشل رفع القصة');
+      setTimeout(() => setUploadError(''), 4000);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -73,6 +75,9 @@ export default function StoriesBar() {
           <span className="text-xs text-[var(--color-muted)]">قصتك</span>
         </button>
         <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleUpload} />
+        {uploadError && (
+          <div className="text-xs text-red-500 mt-1 px-2">{uploadError}</div>
+        )}
 
         {groups.map((group: any) => (
           <button key={group.user.id} onClick={() => openGroup(group)} className="flex flex-col items-center gap-1 shrink-0">

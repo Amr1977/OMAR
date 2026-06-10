@@ -19,36 +19,35 @@ router.get('/posts/:id', optionalAuth, getPost);
 router.get('/hashtag/:tag', optionalAuth, getHashtagFeed);
 
 router.use(authenticate);
-router.use(socialLimiter);
 
 router.post('/posts/media', uploadMedia.single('media'), uploadPostMedia);
-router.post('/posts', createPost);
+router.post('/posts', socialLimiter, createPost);
 router.put('/posts/:id', updatePost);
 router.delete('/posts/:id', deletePost);
 router.get('/feed', getFeed);
 router.get('/explore', getExploreFeed);
 router.patch('/posts/:id/privacy', updatePostPrivacy);
-router.post('/posts/:id/like', toggleLike);
-router.post('/posts/:id/share', sharePost);
+router.post('/posts/:id/like', socialLimiter, toggleLike);
+router.post('/posts/:id/share', socialLimiter, sharePost);
 router.post('/posts/:id/save', toggleSave);
 router.post('/posts/:id/report', reportPost);
 router.post('/posts/:id/pin', togglePinPost);
 
 router.get('/posts/:id/comments', getComments);
-router.post('/posts/:id/comments', addComment);
+router.post('/posts/:id/comments', socialLimiter, addComment);
 router.delete('/posts/:id/comments/:commentId', deleteComment);
 router.get('/posts/:id/comments/:commentId/replies', getReplies);
-router.post('/posts/:id/comments/:commentId/replies', addReply);
+router.post('/posts/:id/comments/:commentId/replies', socialLimiter, addReply);
 router.post('/comments/:commentId/like', toggleCommentLike);
 
 router.get('/saved', getSavedPosts);
 
 router.get('/users/search', searchUsers);
 router.get('/users/suggested', getSuggestedUsers);
-router.get('/users/:userId/profile', optionalAuth, getUserProfile);
+router.get('/users/:userId/profile', getUserProfile);
 router.put('/me/bio', updateSocialBio);
 
-router.post('/follow/:userId', toggleFollow);
+router.post('/follow/:userId', socialLimiter, toggleFollow);
 router.get('/followers', getFollowers);
 router.get('/followers/:userId', getFollowers);
 router.get('/following', getFollowing);

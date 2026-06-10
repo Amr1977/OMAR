@@ -24,6 +24,7 @@ try {
 
 let socket: Socket | null = null;
 let notificationHandler: ((notification: any) => void) | null = null;
+const pendingListeners: { event: string; cb: (...args: any[]) => void }[] = [];
 
 export const onNewNotification = (handler: (notification: any) => void) => {
   notificationHandler = handler;
@@ -50,6 +51,8 @@ export const connectSocket = () => {
 
   socket.on('connect', () => {
     console.log('Socket connected');
+    pendingListeners.forEach(({ event, cb }) => socket!.on(event, cb));
+    pendingListeners.length = 0;
   });
 
   socket.on('disconnect', (reason) => {
@@ -87,9 +90,16 @@ export const disconnectSocket = () => {
 };
 
 export const onNewPostInFeed = (cb: (data: { postId: string; authorId: string }) => void) => {
-  if (!socket) return;
-  socket.on('new_post_in_feed', cb);
-  return () => socket?.off('new_post_in_feed', cb);
+  if (socket?.connected) {
+    socket.on('new_post_in_feed', cb);
+  } else {
+    pendingListeners.push({ event: 'new_post_in_feed', cb });
+  }
+  return () => {
+    socket?.off('new_post_in_feed', cb);
+    const idx = pendingListeners.findIndex(l => l.cb === cb);
+    if (idx !== -1) pendingListeners.splice(idx, 1);
+  };
 };
 
 export const onUserOnline = (cb: (data: { userId: string }) => void) => {

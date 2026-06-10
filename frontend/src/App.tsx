@@ -106,7 +106,7 @@ export default function App() {
         <Route path="messages" element={<ProtectedRoute roles={['GROOM', 'GUARDIAN', 'ADMIN']}><Messages /></ProtectedRoute>} />
         <Route path="messages/:id" element={<ProtectedRoute roles={['GROOM', 'GUARDIAN', 'ADMIN']}><Conversation /></ProtectedRoute>} />
         <Route path="social" element={<ProtectedRoute><SocialFeed /></ProtectedRoute>} />
-        <Route path="social/user/:userId" element={<UserPublicProfile />} />
+        <Route path="social/user/:userId" element={<ProtectedRoute><UserPublicProfile /></ProtectedRoute>} />
         <Route path="social/hashtag/:tag" element={<ProtectedRoute><HashtagFeed /></ProtectedRoute>} />
         <Route path="social/people" element={<ProtectedRoute><PeopleSearch /></ProtectedRoute>} />
         <Route path="social/post/:id" element={<PostDetail />} />
@@ -122,6 +122,7 @@ export default function App() {
         <Route path="admin/messages" element={<ProtectedRoute roles={['ADMIN']}><AdminMessages /></ProtectedRoute>} />
         <Route path="admin/feedback" element={<ProtectedRoute roles={['ADMIN']}><AdminFeedback /></ProtectedRoute>} />
         <Route path="admin/subscriptions" element={<ProtectedRoute roles={['ADMIN']}><AdminSubscriptions /></ProtectedRoute>} />
+        <Route path="admin/donations" element={<ProtectedRoute roles={['ADMIN']}><AdminDonations /></ProtectedRoute>} />
         <Route path="donate" element={<ProtectedRoute><Donate /></ProtectedRoute>} />
         <Route path="guardian/brides" element={<ProtectedRoute roles={['GUARDIAN', 'ADMIN']}><BrideList /></ProtectedRoute>} />
         <Route path="guardian/brides/new" element={<ProtectedRoute roles={['GUARDIAN', 'ADMIN']}><BrideForm /></ProtectedRoute>} />

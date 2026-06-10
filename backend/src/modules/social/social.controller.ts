@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database';
 import { AuthRequest } from '../../middleware/auth';
 import { notifyPostLike, notifyPostComment, notifyNewFollower, createNotification } from '../../services/notification.service';
+import { deleteFile } from '../../config/upload';
 
 export const uploadPostMedia = async (req: AuthRequest, res: Response) => {
   try {
@@ -85,20 +86,23 @@ const parseAndSaveHashtags = async (postId: string, content: string): Promise<vo
 
 const parseMentions = async (postId: string, content: string, authorId: string): Promise<void> => {
   const mentionMatches = content.match(/@[\u0600-\u06FFa-zA-Z0-9_]+/g) || [];
-  const names = [...new Set(mentionMatches.map(m => m.slice(1)))];
+  const names = [...new Set(mentionMatches.map(m => m.slice(1)))].slice(0, 10);
   if (names.length === 0) return;
-  for (const name of names.slice(0, 10)) {
-    const profile = await prisma.profile.findFirst({
-      where: { displayName: { equals: name, mode: 'insensitive' } },
-      select: { userId: true, displayName: true },
-    });
-    if (!profile || profile.userId === authorId) continue;
+  const profiles = await prisma.profile.findMany({
+    where: {
+      displayName: { in: names, mode: 'insensitive' },
+      userId: { not: authorId },
+    },
+    select: { userId: true, displayName: true },
+  });
+  if (profiles.length === 0) return;
+  const authorName = await getUserDisplayName(authorId);
+  await Promise.allSettled(profiles.map(async (profile) => {
     await prisma.postMention.upsert({
       where: { postId_userId: { postId, userId: profile.userId } },
       update: {},
       create: { postId, userId: profile.userId },
     });
-    const authorName = await getUserDisplayName(authorId);
     createNotification({
       userId: profile.userId,
       type: 'post_mention',
@@ -108,7 +112,7 @@ const parseMentions = async (postId: string, content: string, authorId: string):
       bodyEn: `${authorName} mentioned you in a post`,
       data: { postId, authorId },
     });
-  }
+  }));
 };
 
 export const createPost = async (req: AuthRequest, res: Response) => {
@@ -263,10 +267,11 @@ export const getPost = async (req: AuthRequest, res: Response) => {
     if (req.userId && req.userId !== post.userId) {
       prisma.postView.upsert({
         where: { postId_userId: { postId: post.id, userId: req.userId } },
-        update: {},
+        update: { viewedAt: new Date() },
         create: { postId: post.id, userId: req.userId },
-      }).then(() => {
-        prisma.post.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
+      }).then(async () => {
+        const viewCount = await prisma.postView.count({ where: { postId: post.id } });
+        prisma.post.update({ where: { id: post.id }, data: { viewCount } }).catch(() => {});
       }).catch(() => {});
     }
 
@@ -351,7 +356,7 @@ export const sharePost = async (req: AuthRequest, res: Response) => {
 export const updatePost = async (req: AuthRequest, res: Response) => {
   try {
     const postId = id(req);
-    const post = await prisma.post.findUnique({ where: { id: postId } });
+    const post = await prisma.post.findUnique({ where: { id: postId }, select: { userId: true, mediaUrls: true, privacy: true } });
     if (!post || post.userId !== req.userId) {
       return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your post' });
     }
@@ -374,6 +379,10 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
       },
       include: postIncludeFull(req.userId!),
     });
+    if (mediaUrls !== undefined) {
+      const removedUrls = post.mediaUrls.filter((u: string) => !(mediaUrls as string[]).includes(u));
+      removedUrls.forEach((url: string) => deleteFile(url));
+    }
     res.json(updated);
   } catch (error) {
     console.error('Update post error:', error);
@@ -383,11 +392,25 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
 
 export const deletePost = async (req: AuthRequest, res: Response) => {
   try {
-    const post = await prisma.post.findUnique({ where: { id: id(req) } });
+    const post = await prisma.post.findUnique({
+      where: { id: id(req) },
+      select: { id: true, userId: true, mediaUrls: true, hashtags: { include: { hashtag: true } } },
+    });
     if (!post || post.userId !== req.userId) {
       return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your post' });
     }
     await prisma.post.delete({ where: { id: id(req) } });
+    post.mediaUrls.forEach(url => deleteFile(url));
+    if (post.hashtags?.length > 0) {
+      await prisma.$transaction(
+        post.hashtags.map(ph =>
+          prisma.hashtag.update({
+            where: { id: ph.hashtagId },
+            data: { postCount: { decrement: 1 } },
+          })
+        )
+      );
+    }
     res.json({ message: 'Post deleted' });
   } catch (error) {
     console.error('Delete post error:', error);
@@ -449,9 +472,16 @@ export const addComment = async (req: AuthRequest, res: Response) => {
 export const deleteComment = async (req: AuthRequest, res: Response) => {
   try {
     const commentId = req.params.commentId as string;
-    const comment = await prisma.postComment.findUnique({ where: { id: commentId } });
-    if (!comment || comment.userId !== req.userId) {
-      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your comment' });
+    const postId = req.params.id as string;
+    const comment = await prisma.postComment.findUnique({
+      where: { id: commentId },
+      include: { post: { select: { userId: true } } },
+    });
+    if (!comment) return res.status(404).json({ error: 'NOT_FOUND' });
+    const isCommentAuthor = comment.userId === req.userId;
+    const isPostOwner = comment.post?.userId === req.userId;
+    if (!isCommentAuthor && !isPostOwner) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not your comment or post' });
     }
     await prisma.postComment.delete({ where: { id: commentId } });
     res.json({ message: 'Comment deleted' });
@@ -486,12 +516,19 @@ export const toggleFollow = async (req: AuthRequest, res: Response) => {
 export const getFollowers = async (req: AuthRequest, res: Response) => {
   try {
     const userId = (req.params.userId as string) || req.userId!;
-    const followers = await prisma.follow.findMany({
-      where: { followingId: userId },
-      include: { follower: { select: { id: true, roles: true, subscriptionPlan: true, isOnline: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(followers.map(f => ({ ...f.follower, followedAt: f.createdAt })));
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
+    const [followers, total] = await Promise.all([
+      prisma.follow.findMany({
+        where: { followingId: userId },
+        include: { follower: { select: { id: true, roles: true, subscriptionPlan: true, isOnline: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.follow.count({ where: { followingId: userId } }),
+    ]);
+    res.json({ followers: followers.map(f => ({ ...f.follower, followedAt: f.createdAt })), total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Get followers error:', error);
     res.status(500).json({ error: 'INTERNAL', message: 'Failed to get followers' });
@@ -501,12 +538,19 @@ export const getFollowers = async (req: AuthRequest, res: Response) => {
 export const getFollowing = async (req: AuthRequest, res: Response) => {
   try {
     const userId = (req.params.userId as string) || req.userId!;
-    const following = await prisma.follow.findMany({
-      where: { followerId: userId },
-      include: { following: { select: { id: true, roles: true, subscriptionPlan: true, isOnline: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(following.map(f => ({ ...f.following, followedAt: f.createdAt })));
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
+    const [following, total] = await Promise.all([
+      prisma.follow.findMany({
+        where: { followerId: userId },
+        include: { following: { select: { id: true, roles: true, subscriptionPlan: true, isOnline: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.follow.count({ where: { followerId: userId } }),
+    ]);
+    res.json({ following: following.map(f => ({ ...f.following, followedAt: f.createdAt })), total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Get following error:', error);
     res.status(500).json({ error: 'INTERNAL', message: 'Failed to get following' });
@@ -747,15 +791,17 @@ export const toggleBlock = async (req: AuthRequest, res: Response) => {
       await prisma.block.delete({ where: { id: existing.id } });
       return res.json({ blocked: false });
     } else {
-      await prisma.follow.deleteMany({
-        where: {
-          OR: [
-            { followerId: req.userId!, followingId: blockedId },
-            { followerId: blockedId, followingId: req.userId! },
-          ],
-        },
-      });
-      await prisma.block.create({ data: { blockerId: req.userId!, blockedId } });
+      await prisma.$transaction([
+        prisma.follow.deleteMany({
+          where: {
+            OR: [
+              { followerId: req.userId!, followingId: blockedId },
+              { followerId: blockedId, followingId: req.userId! },
+            ],
+          },
+        }),
+        prisma.block.create({ data: { blockerId: req.userId!, blockedId } }),
+      ]);
       return res.json({ blocked: true });
     }
   } catch (error) {
@@ -819,7 +865,7 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
         _count: { select: { posts: true, followers: true, following: true } },
       },
     });
-    if (!user || (!user.isVerified && user.id !== req.userId) || !user.isActive) {
+    if (!user || !user.isActive) {
       return res.status(404).json({ error: 'NOT_FOUND' });
     }
     let isFollowing = false;
@@ -1104,6 +1150,7 @@ export const deleteStory = async (req: AuthRequest, res: Response) => {
     const story = await prisma.story.findUnique({ where: { id: storyId } });
     if (!story || story.userId !== req.userId) return res.status(403).json({ error: 'FORBIDDEN' });
     await prisma.story.delete({ where: { id: storyId } });
+    deleteFile(story.mediaUrl);
     return res.json({ message: 'Story deleted' });
   } catch (error) {
     return res.status(500).json({ error: 'INTERNAL' });

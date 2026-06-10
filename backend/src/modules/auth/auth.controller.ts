@@ -23,6 +23,7 @@ const formatUser = (user: any) => ({
   isActive: user.isActive,
   isBanned: user.isBanned,
   subscriptionPlan: user.subscriptionPlan,
+  subscriptionExpiry: user.subscriptionExpiry ?? null,
   language: user.language,
 });
 
@@ -160,10 +161,12 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      include: {
-        profile: {
-          include: { photos: { orderBy: { order: 'asc' }, take: 1 } },
-        },
+      select: {
+        id: true, firebaseUid: true, phone: true, email: true, roles: true,
+        isVerified: true, subscriptionPlan: true, subscriptionExpiry: true,
+        language: true, isActive: true, isBanned: true, bio: true, tagline: true,
+        websiteUrl: true, isOnline: true, createdAt: true,
+        profile: { include: { photos: { orderBy: { order: 'asc' }, take: 1 } } },
       },
     });
 
@@ -186,6 +189,10 @@ export const getMe = async (req: AuthRequest, res: Response) => {
       hasProfile: !!user.profile,
       profileId: user.profile?.id,
       profilePhoto: user.profile?.photos?.[0]?.url || null,
+      bio: user.bio,
+      tagline: user.tagline,
+      websiteUrl: user.websiteUrl,
+      isOnline: user.isOnline,
       createdAt: user.createdAt,
     });
   } catch (error) {

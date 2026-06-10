@@ -20,6 +20,7 @@ import notificationRoutes from './modules/notifications/notifications.routes';
 import paymentRoutes from './modules/payments/payments.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import socialRoutes from './modules/social/social.routes';
+import { startCleanupJobs } from './services/cleanup.service';
 import feedbackRoutes from './modules/feedback/feedback.routes';
 import subscriptionRoutes from './modules/subscriptions/subscriptions.routes';
 import donationRoutes from './modules/donations/donations.routes';
@@ -44,7 +45,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use(generalLimiter);
 app.use(requestLogger);
 
@@ -122,6 +123,8 @@ const startServer = async () => {
     httpServer.listen(PORT, '0.0.0.0', () => {
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Health check: http://localhost:${PORT}/health`);
+      startCleanupJobs();
+      logger.info('Cleanup jobs started');
     });
   } catch (error) {
     logger.error('Failed to start server', { error });

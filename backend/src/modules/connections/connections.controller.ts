@@ -10,6 +10,11 @@ export const sendConnectionRequest = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ error: 'INVALID', messageAr: 'لا يمكنك الاتصال بنفسك', messageEn: 'Cannot connect with yourself' });
     }
 
+    const receiver = await prisma.user.findUnique({ where: { id: receiverId }, select: { id: true, isActive: true } });
+    if (!receiver || !receiver.isActive) {
+      return res.status(404).json({ error: 'NOT_FOUND', messageAr: 'المستخدم غير موجود', messageEn: 'User not found' });
+    }
+
     const existing = await prisma.connectionRequest.findUnique({
       where: { senderId_receiverId: { senderId: req.userId!, receiverId } },
     });

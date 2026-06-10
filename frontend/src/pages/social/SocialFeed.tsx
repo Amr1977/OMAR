@@ -60,9 +60,13 @@ export default function SocialFeed() {
   };
 
   useEffect(() => {
-    if (page > 1) fetchPosts(true);
-    else fetchPosts();
-  }, [tab, page]);
+    setPage(1);
+    fetchPosts(false, 1);
+  }, [tab]);
+
+  useEffect(() => {
+    if (page > 1) fetchPosts(true, page);
+  }, [page]);
 
   useEffect(() => {
     const unsub = onNewPostInFeed(({ postId }) => {
@@ -125,8 +129,8 @@ export default function SocialFeed() {
       setMediaUrls([]);
       setMediaPreviews([]);
       setUploadError('');
+      fetchPosts(false, 1);
       setPage(1);
-      if (page === 1) fetchPosts(false, 1);
     } catch (e) {} finally { setSubmitting(false); }
   };
 
@@ -148,11 +152,14 @@ export default function SocialFeed() {
   };
 
   const handleLike = async (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    const isLiked = !!(post.likes?.[0]);
     await api.social.toggleLike(postId);
-    setPosts(posts.map(p => p.id === postId ? {
+    setPosts(prev => prev.map(p => p.id === postId ? {
       ...p,
-      liked: !p.liked,
-      _count: { ...p._count, likes: p.liked ? p._count.likes - 1 : p._count.likes + 1 },
+      likes: isLiked ? [] : [{ userId: currentUserId }],
+      _count: { ...p._count, likes: isLiked ? p._count.likes - 1 : p._count.likes + 1 },
     } : p));
   };
 
@@ -447,7 +454,9 @@ export default function SocialFeed() {
                 </div>
               ) : (
               <Link to={`/social/post/${post.id}`}>
-                <p className="text-sm text-[var(--color-text)] leading-relaxed mb-3 whitespace-pre-wrap">{renderRichText(post.content)}</p>
+                {post.content && (
+                <p className="text-sm text-[var(--color-text)] leading-relaxed mb-3 whitespace-pre-wrap">{renderRichText(post.content, post.mentions)}</p>
+                )}
                 {post.mediaUrls?.length > 0 && (
                   <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
                     {post.mediaUrls.map((url: string, i: number) => (
@@ -491,8 +500,8 @@ export default function SocialFeed() {
 
               {/* Actions */}
               <div className="flex items-center gap-6 pt-3 border-t border-[var(--color-border)]">
-                <button onClick={() => handleLike(post.id)} className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked?.[0] || post.liked ? 'text-red-500' : 'text-[var(--color-muted)] hover:text-red-500'}`}>
-                  <svg className="w-5 h-5" fill={post.liked?.[0] || post.liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <button onClick={() => handleLike(post.id)} className={`flex items-center gap-1.5 text-sm transition-colors ${post.likes?.[0] ? 'text-red-500' : 'text-[var(--color-muted)] hover:text-red-500'}`}>
+                  <svg className="w-5 h-5" fill={post.likes?.[0] ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                   {post._count.likes}

@@ -18,14 +18,17 @@ export const startDirectConversation = async (req: AuthRequest, res: Response) =
     const existing = await prisma.conversation.findFirst({
       where: {
         type: 'DIRECT',
-        participants: { some: { userId: { in: [req.userId!, recipientId] } } },
+        AND: [
+          { participants: { some: { userId: req.userId! } } },
+          { participants: { some: { userId: recipientId } } },
+        ],
       },
       include: { participants: true },
     });
 
-    if (existing && existing.participants.length === 2) {
+    if (existing) {
       const pIds = existing.participants.map(p => p.userId);
-      if (pIds.includes(req.userId!) && pIds.includes(recipientId)) {
+      if (pIds.includes(req.userId!) && pIds.includes(recipientId) && existing.participants.length === 2) {
         return res.json(existing);
       }
     }
