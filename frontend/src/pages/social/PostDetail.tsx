@@ -246,9 +246,9 @@ export default function PostDetail() {
                 <div className="grid gap-2 mb-4" style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
                   {post.mediaUrls.map((url: string, i: number) => (
                     isVideoUrl(url) ? (
-                      <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full h-64 object-cover" />
+                      <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-[80vh] object-contain bg-gray-100 dark:bg-gray-800" />
                     ) : (
-                      <img key={i} src={photoUrl(url)} alt="" className="rounded-lg w-full h-64 object-cover cursor-pointer" onClick={() => setViewerImg(photoUrl(url))} />
+                      <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full max-h-[80vh] object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={() => setViewerImg(photoUrl(url))} />
                     )
                   ))}
                 </div>
@@ -270,9 +270,9 @@ export default function PostDetail() {
                       <div className="grid gap-2 mt-2" style={{ gridTemplateColumns: post.sharedPost.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
                         {post.sharedPost.mediaUrls.map((url: string, i: number) => (
                           isVideoUrl(url) ? (
-                            <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full h-32 object-cover" />
-                          ) : (
-                            <img key={i} src={photoUrl(url)} alt="" className="rounded-lg w-full h-32 object-cover" />
+                          <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800" />
+                        ) : (
+                          <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={() => setViewerImg(photoUrl(url))} />
                           )
                         ))}
                       </div>
