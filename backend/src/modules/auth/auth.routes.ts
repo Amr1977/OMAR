@@ -11,7 +11,7 @@ router.post('/refresh-token', refreshToken);
 router.post('/logout', authenticate, logout);
 router.get('/me', authenticate, getMe);
 router.put('/roles', authenticate, updateRoles);
-router.put('/avatar', authenticate, updateAvatar);
+router.post('/avatar', authenticate, updateAvatar);
 router.delete('/avatar', authenticate, deleteAvatar);
 
 export default router;
