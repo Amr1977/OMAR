@@ -1,5 +1,13 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
 dotenv.config();
+const envLocalPath = '.env.local';
+if (fs.existsSync(envLocalPath)) {
+  const envLocal = dotenv.parse(fs.readFileSync(envLocalPath));
+  for (const key of Object.keys(envLocal)) {
+    process.env[key] = envLocal[key];
+  }
+}
 
 import path from 'path';
 import express from 'express';

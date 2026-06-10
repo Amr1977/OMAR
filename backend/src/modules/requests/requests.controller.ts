@@ -326,7 +326,6 @@ export const guardianPropose = async (req: AuthRequest, res: Response) => {
       where: {
         senderId: req.userId!,
         profileId: groomProfileId,
-        brideId,
         initiatedBy: 'GUARDIAN',
       },
     });

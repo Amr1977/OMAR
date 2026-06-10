@@ -307,7 +307,7 @@ model ContactRequest {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  @@unique([senderId, profileId])
+  @@unique([senderId, profileId, brideId])
   @@index([brideId])
 }
 
