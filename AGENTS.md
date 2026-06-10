@@ -56,6 +56,42 @@ Full social media feature set implemented across all layers:
 - `UserAvatar` `size` prop only accepts `'sm' | 'md' | 'lg'` (no 'xl')
 - `await` outside async function in socket handler — use IIFE
 
+## Client Logging System
+
+### Architecture
+
+```
+FE console.log/error/warn/info/debug
+  → FrontendLogger (frontend/src/lib/logger.ts)
+    → sendBeacon(raw string, text/plain)  // no CORS preflight needed
+    → POST https://commerce-api.et3am.com/hafsa/api/logs/client[/public]
+      → nginx /hafsa/api/logs/ → backend :3001/api/logs/
+      → logs.controller.ts ingestClientLog / ingestClientLogPublic
+        → Winston DailyRotateFile → backend/logs/*.log
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/lib/logger.ts` | Overrides `console.*` methods, queues entries, flushes via `sendBeacon` (falls back to `fetch`). Anonymous → `/client/public`, authenticated → `/client` |
+| `backend/src/modules/logs/logs.controller.ts` | `ingestClientLog` (auth'd), `ingestClientLogPublic` (anon) — parse JSON body and log via Winston |
+| `backend/src/modules/logs/logs.routes.ts` | Routes: `POST /client` (auth + 30/min), `POST /client/public` (anon + 5/min) |
+| `backend/src/services/logger.ts` | Winston with daily rotation to `backend/logs/` |
+
+### Important Details
+
+- **CORS fix**: `sendBeacon` sends raw string (`text/plain`), NOT `application/json` Blob — avoids silent CORS preflight failure on cross-origin requests from Firebase → commerce-api
+- **URL fix**: `LOGS_PUBLIC` uses full API URL (`${API_BASE}/logs/client/public`) not relative path — Firebase hosting has no `/logs/` proxy
+- **Backend**: `express.text()` middleware and `JSON.parse` for string bodies so `text/plain` payloads are handled
+- **PM2** captures stdout from Winston console transport — view via `pm2 logs hafsa-backend`
+
+### Stored Logs
+
+On EC2 at `/home/ec2-user/hafsa/backend/logs/`:
+- `combined-YYYY-MM-DD.log` — all levels (30 days, 20MB each, zipped)
+- `error-YYYY-MM-DD.log` — errors only (90 days, 20MB each, zipped)
+
 ## Build Commands (both must pass)
 ```
 cd backend && npm run build
