@@ -393,6 +393,9 @@ model Post {
   reports   PostReport[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([privacy, createdAt(sort: Desc)])
 }
 
 model PostPrivacyUser {
@@ -431,6 +434,7 @@ model PostComment {
   updatedAt DateTime @updatedAt
 
   @@index([parentId])
+  @@index([postId])
 }
 
 model PostCommentLike {
@@ -565,6 +569,7 @@ model Follow {
   createdAt   DateTime @default(now())
 
   @@unique([followerId, followingId])
+  @@index([followingId])
 }
 
 model AdminLog {

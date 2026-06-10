@@ -1,25 +1,25 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { api, photoUrl, isVideoUrl } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import { onNewPostInFeed, emitPostCreated } from '../../lib/socket';
 import { renderRichText } from '../../lib/richText';
 import ImageViewer from '../../components/ImageViewer';
 import UserAvatar from '../../components/UserAvatar';
+import PostCardSkeleton from '../../components/PostCardSkeleton';
 import StoriesBar from './StoriesBar';
 
 export default function SocialFeed() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthStore();
   const currentUserId = currentUser?.id;
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [newPost, setNewPost] = useState('');
   const [postPrivacy, setPostPrivacy] = useState<'PUBLIC' | 'PRIVATE' | 'CONNECTIONS' | 'SELECTED'>('PUBLIC');
   const [tab, setTab] = useState<'feed' | 'explore'>('feed');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<{ id: string; url: string; type: string; uploading: boolean }[]>([]);
@@ -49,33 +49,33 @@ export default function SocialFeed() {
   const uploadingCount = mediaPreviews.filter(m => m.uploading).length;
   const canPublish = (newPost.trim() || mediaUrls.length > 0) && !submitting && uploadingCount === 0;
 
-  const fetchPosts = (append = false, pageNum?: number) => {
-    const p = pageNum ?? page;
-    setLoading(true);
-    const fetcher = tab === 'feed' ? api.social.getFeed(`page=${p}&limit=20`) : api.social.getExplore(`page=${p}&limit=20`);
-    fetcher.then((res: any) => {
-      setPosts(prev => append ? [...prev, ...res.posts] : res.posts);
-      setTotalPages(res.totalPages);
-    }).catch(() => {}).finally(() => setLoading(false));
-  };
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isFetching,
+  } = useInfiniteQuery({
+    queryKey: ['social-feed', tab],
+    queryFn: ({ pageParam }) => {
+      const params = pageParam ? `cursor=${pageParam}&limit=20` : 'limit=20';
+      return tab === 'feed' ? api.social.getFeed(params) : api.social.getExplore(params);
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage: any) => lastPage.nextCursor,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+  });
+
+  const posts = data?.pages.flatMap((page: any) => page.posts) ?? [];
 
   useEffect(() => {
-    setPage(1);
-    fetchPosts(false, 1);
-  }, [tab]);
-
-  useEffect(() => {
-    if (page > 1) fetchPosts(true, page);
-  }, [page]);
-
-  useEffect(() => {
-    const unsub = onNewPostInFeed(({ postId }) => {
-      api.social.getPost(postId).then(post => {
-        setPosts(prev => [post, ...prev]);
-      }).catch(() => {});
+    const unsub = onNewPostInFeed(() => {
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
     });
     return () => { unsub?.(); };
-  }, []);
+  }, [queryClient]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -129,19 +129,40 @@ export default function SocialFeed() {
       setMediaUrls([]);
       setMediaPreviews([]);
       setUploadError('');
-      fetchPosts(false, 1);
-      setPage(1);
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
     } catch (e) {} finally { setSubmitting(false); }
   };
 
   const handleSave = async (postId: string) => {
     const res = await api.social.toggleSave(postId);
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, saves: res.saved ? [{ userId: currentUserId }] : [] } : p));
+    queryClient.setQueriesData({ queryKey: ['social-feed'] }, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          posts: page.posts.map((p: any) =>
+            p.id === postId ? { ...p, saves: res.saved ? [{ userId: currentUserId }] : [] } : p
+          ),
+        })),
+      };
+    });
   };
 
   const handlePin = async (postId: string) => {
     await api.social.togglePin(postId);
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, isPinned: !p.isPinned } : p));
+    queryClient.setQueriesData({ queryKey: ['social-feed'] }, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          posts: page.posts.map((p: any) =>
+            p.id === postId ? { ...p, isPinned: !p.isPinned } : p
+          ),
+        })),
+      };
+    });
   };
 
   const handleReport = async (postId: string) => {
@@ -156,17 +177,28 @@ export default function SocialFeed() {
     if (!post) return;
     const isLiked = !!(post.likes?.[0]);
     await api.social.toggleLike(postId);
-    setPosts(prev => prev.map(p => p.id === postId ? {
-      ...p,
-      likes: isLiked ? [] : [{ userId: currentUserId }],
-      _count: { ...p._count, likes: isLiked ? p._count.likes - 1 : p._count.likes + 1 },
-    } : p));
+    queryClient.setQueriesData({ queryKey: ['social-feed'] }, (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          posts: page.posts.map((p: any) =>
+            p.id === postId ? {
+              ...p,
+              likes: isLiked ? [] : [{ userId: currentUserId }],
+              _count: { ...p._count, likes: isLiked ? p._count.likes - 1 : p._count.likes + 1 },
+            } : p
+          ),
+        })),
+      };
+    });
   };
 
   const handleDelete = async (postId: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المنشور؟')) return;
     await api.social.deletePost(postId);
-    setPosts(posts.filter(p => p.id !== postId));
+    queryClient.invalidateQueries({ queryKey: ['social-feed'] });
   };
 
   const copyLink = (postId: string) => {
@@ -179,7 +211,7 @@ export default function SocialFeed() {
     setSharingSubmitting(true);
     try {
       const shared = await api.social.sharePost(postId, shareContent || undefined);
-      setPosts(prev => [shared, ...prev]);
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       setSharingId(null);
       setShareContent('');
     } catch (e) {} finally { setSharingSubmitting(false); }
@@ -239,8 +271,8 @@ export default function SocialFeed() {
     if (!editContent.trim()) return;
     setSubmitting(true);
     try {
-      const updated = await api.social.updatePost(postId, { content: editContent, mediaUrls: editMediaUrls, privacy: currentPrivacy });
-      setPosts(posts.map(p => p.id === postId ? updated : p));
+      await api.social.updatePost(postId, { content: editContent, mediaUrls: editMediaUrls, privacy: currentPrivacy });
+      queryClient.invalidateQueries({ queryKey: ['social-feed'] });
       cancelEdit();
     } catch (e) {} finally { setSubmitting(false); }
   };
@@ -255,10 +287,10 @@ export default function SocialFeed() {
 
       {/* Tabs */}
       <div className="flex gap-4 mb-6 border-b border-[var(--color-border)]">
-        <button onClick={() => { setTab('feed'); setPage(1); }} className={`pb-3 text-sm font-medium border-b-2 transition-colors ${tab === 'feed' ? 'text-[var(--color-primary)] border-[var(--color-primary)]' : 'text-[var(--color-muted)] border-transparent'}`}>
+        <button onClick={() => setTab('feed')} className={`pb-3 text-sm font-medium border-b-2 transition-colors ${tab === 'feed' ? 'text-[var(--color-primary)] border-[var(--color-primary)]' : 'text-[var(--color-muted)] border-transparent'}`}>
           المتابعة
         </button>
-        <button onClick={() => { setTab('explore'); setPage(1); }} className={`pb-3 text-sm font-medium border-b-2 transition-colors ${tab === 'explore' ? 'text-[var(--color-primary)] border-[var(--color-primary)]' : 'text-[var(--color-muted)] border-transparent'}`}>
+        <button onClick={() => setTab('explore')} className={`pb-3 text-sm font-medium border-b-2 transition-colors ${tab === 'explore' ? 'text-[var(--color-primary)] border-[var(--color-primary)]' : 'text-[var(--color-muted)] border-transparent'}`}>
           استكشف
         </button>
       </div>
@@ -325,8 +357,10 @@ export default function SocialFeed() {
       </div>
 
       {/* Posts */}
-      {loading ? (
-        <div className="text-center py-8 text-[var(--color-muted)]">جاري التحميل...</div>
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => <PostCardSkeleton key={i} />)}
+        </div>
       ) : posts.length === 0 ? (
         <div className="text-center py-16 text-[var(--color-muted)]">
           <p className="text-lg mb-2">لا توجد منشورات</p>
@@ -436,7 +470,18 @@ export default function SocialFeed() {
                     <input ref={editFileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleEditFileSelect} />
                     <select value={post.privacy} onChange={(e) => {
                       const newPrivacy = e.target.value;
-                      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, privacy: newPrivacy } : p));
+                      queryClient.setQueriesData({ queryKey: ['social-feed'] }, (old: any) => {
+                        if (!old) return old;
+                        return {
+                          ...old,
+                          pages: old.pages.map((page: any) => ({
+                            ...page,
+                            posts: page.posts.map((p: any) =>
+                                p.id === post.id ? { ...p, privacy: newPrivacy } : p
+                            ),
+                          })),
+                        };
+                      });
                     }} className="text-xs border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-muted)] bg-[var(--color-surface)]">
                       <option value="PUBLIC">عام</option>
                       <option value="CONNECTIONS">المتابعين</option>
@@ -463,7 +508,7 @@ export default function SocialFeed() {
                       isVideoUrl(url) ? (
                         <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full h-48 object-cover" />
                       ) : (
-                        <img key={i} src={photoUrl(url)} alt="" className="rounded-lg w-full h-48 object-cover cursor-pointer" onClick={(e) => { e.preventDefault(); setViewerImg(photoUrl(url)); }} />
+                        <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full h-48 object-cover cursor-pointer" onClick={(e) => { e.preventDefault(); setViewerImg(photoUrl(url)); }} />
                       )
                     ))}
                   </div>
@@ -487,7 +532,7 @@ export default function SocialFeed() {
                             isVideoUrl(url) ? (
                               <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full h-24 object-cover" />
                             ) : (
-                              <img key={i} src={photoUrl(url)} alt="" className="rounded-lg w-full h-24 object-cover" />
+                              <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full h-24 object-cover" />
                             )
                           ))}
                         </div>
@@ -587,13 +632,14 @@ export default function SocialFeed() {
           ))}
 
           {/* Load more */}
-          {page < totalPages && (
+          {hasNextPage && (
             <div className="text-center mt-6">
               <button
-                onClick={() => setPage(p => p + 1)}
-                className="px-8 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="px-8 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all disabled:opacity-50"
               >
-                عرض المزيد
+                {isFetchingNextPage ? 'جاري التحميل...' : 'عرض المزيد'}
               </button>
             </div>
           )}

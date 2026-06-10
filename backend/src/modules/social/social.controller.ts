@@ -53,9 +53,14 @@ const postInclude = (userId: string) => ({
   _count: { select: { likes: true, comments: true, saves: true } },
   ...(userId ? { likes: { where: { userId }, take: 1 }, saves: { where: { userId }, take: 1 } } : {}),
   sharedPost: {
-    include: {
+    select: {
+      id: true,
+      content: true,
+      mediaUrls: true,
+      createdAt: true,
+      userId: true,
+      privacy: true,
       user: { select: { id: true, roles: true, subscriptionPlan: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
-      _count: { select: { likes: true, comments: true } },
     },
   },
   hashtags: { include: { hashtag: { select: { tag: true } } } },
@@ -154,48 +159,45 @@ const privacyFilter = (userId: string, followingIds: string[]): Prisma.PostWhere
 
 export const getFeed = async (req: AuthRequest, res: Response) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const cursor = req.query.cursor as string | undefined;
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
-    const follows = await prisma.follow.findMany({
-      where: { followerId: req.userId },
-      select: { followingId: true },
-    });
-    const followingIds = follows.map(f => f.followingId);
 
-    const blockedIds = await prisma.block.findMany({
-      where: { OR: [{ blockerId: req.userId }, { blockedId: req.userId }] },
-      select: { blockerId: true, blockedId: true },
-    }).then(blocks => blocks.flatMap(b => [b.blockerId, b.blockedId]).filter(id => id !== req.userId));
-
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany({
-        where: {
-          userId: { notIn: blockedIds },
-          OR: [
-            { userId: { in: followingIds }, privacy: 'PUBLIC' as any },
-            { userId: { in: followingIds }, privacy: 'CONNECTIONS' as any },
-            { userId: req.userId },
-            { privacy: 'SELECTED' as any, allowedUsers: { some: { userId: req.userId! } } },
-          ],
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-        include: postInclude(req.userId!),
+    const [follows, blockedRows] = await Promise.all([
+      prisma.follow.findMany({
+        where: { followerId: req.userId },
+        select: { followingId: true },
       }),
-      prisma.post.count({
-        where: {
-          userId: { notIn: blockedIds },
-          OR: [
-            { userId: { in: followingIds }, privacy: 'PUBLIC' as any },
-            { userId: { in: followingIds }, privacy: 'CONNECTIONS' as any },
-            { userId: req.userId },
-            { privacy: 'SELECTED' as any, allowedUsers: { some: { userId: req.userId! } } },
-          ],
-        },
+      prisma.block.findMany({
+        where: { OR: [{ blockerId: req.userId }, { blockedId: req.userId }] },
+        select: { blockerId: true, blockedId: true },
       }),
     ]);
-    res.json({ posts, total, page, totalPages: Math.ceil(total / limit) });
+    const followingIds = follows.map(f => f.followingId);
+    const blockedIds = blockedRows.flatMap(b => [b.blockerId, b.blockedId]).filter(id => id !== req.userId);
+
+    const where = {
+      userId: { notIn: blockedIds },
+      OR: [
+        { userId: { in: followingIds }, privacy: 'PUBLIC' as any },
+        { userId: { in: followingIds }, privacy: 'CONNECTIONS' as any },
+        { userId: req.userId },
+        { privacy: 'SELECTED' as any, allowedUsers: { some: { userId: req.userId! } } },
+      ],
+    };
+
+    const posts = await prisma.post.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: postInclude(req.userId!),
+    });
+
+    const hasMore = posts.length > limit;
+    if (hasMore) posts.pop();
+    const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+
+    res.json({ posts, nextCursor });
   } catch (error) {
     console.error('Get feed error:', error);
     res.status(500).json({ error: 'INTERNAL', message: 'Failed to get feed' });
@@ -204,41 +206,37 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
 
 export const getExploreFeed = async (req: AuthRequest, res: Response) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const cursor = req.query.cursor as string | undefined;
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
 
-    const blockedIds = await prisma.block.findMany({
+    const blockedRows = await prisma.block.findMany({
       where: { OR: [{ blockerId: req.userId }, { blockedId: req.userId }] },
       select: { blockerId: true, blockedId: true },
-    }).then(blocks => blocks.flatMap(b => [b.blockerId, b.blockedId]).filter(id => id !== req.userId));
+    });
+    const blockedIds = blockedRows.flatMap(b => [b.blockerId, b.blockedId]).filter(id => id !== req.userId);
 
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany({
-        where: {
-          userId: { notIn: blockedIds },
-          OR: [
-            { privacy: 'PUBLIC' as any },
-            { userId: req.userId },
-            { privacy: 'SELECTED' as any, allowedUsers: { some: { userId: req.userId! } } },
-          ],
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-        include: postInclude(req.userId!),
-      }),
-      prisma.post.count({
-        where: {
-          userId: { notIn: blockedIds },
-          OR: [
-            { privacy: 'PUBLIC' as any },
-            { userId: req.userId },
-            { privacy: 'SELECTED' as any, allowedUsers: { some: { userId: req.userId! } } },
-          ],
-        },
-      }),
-    ]);
-    res.json({ posts, total, page, totalPages: Math.ceil(total / limit) });
+    const where = {
+      userId: { notIn: blockedIds },
+      OR: [
+        { privacy: 'PUBLIC' as any },
+        { userId: req.userId },
+        { privacy: 'SELECTED' as any, allowedUsers: { some: { userId: req.userId! } } },
+      ],
+    };
+
+    const posts = await prisma.post.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: postInclude(req.userId!),
+    });
+
+    const hasMore = posts.length > limit;
+    if (hasMore) posts.pop();
+    const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+
+    res.json({ posts, nextCursor });
   } catch (error) {
     console.error('Get explore error:', error);
     res.status(500).json({ error: 'INTERNAL', message: 'Failed to get explore feed' });
@@ -269,9 +267,6 @@ export const getPost = async (req: AuthRequest, res: Response) => {
         where: { postId_userId: { postId: post.id, userId: req.userId } },
         update: { viewedAt: new Date() },
         create: { postId: post.id, userId: req.userId },
-      }).then(async () => {
-        const viewCount = await prisma.postView.count({ where: { postId: post.id } });
-        prisma.post.update({ where: { id: post.id }, data: { viewCount } }).catch(() => {});
       }).catch(() => {});
     }
 

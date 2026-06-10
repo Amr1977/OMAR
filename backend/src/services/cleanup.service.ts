@@ -43,8 +43,31 @@ export const cleanupOldPostViews = async () => {
   }
 };
 
+export const syncPostViewCounts = async () => {
+  try {
+    const result = await prisma.$queryRaw<Array<{ postId: string; count: bigint }>>`
+      SELECT "postId", COUNT(*)::bigint as count
+      FROM "PostView"
+      GROUP BY "postId"
+    `;
+    for (const row of result) {
+      await prisma.post.update({
+        where: { id: row.postId },
+        data: { viewCount: Number(row.count) },
+      }).catch(() => {});
+    }
+    if (result.length > 0) {
+      console.log(`Cleanup: synced view counts for ${result.length} posts`);
+    }
+  } catch (error) {
+    console.error('Sync post view counts error:', error);
+  }
+};
+
 export const startCleanupJobs = () => {
   setInterval(cleanupExpiredStories, 60 * 60 * 1000);
   setInterval(cleanupOldPostViews, 24 * 60 * 60 * 1000);
+  setInterval(syncPostViewCounts, 5 * 60 * 1000);
   cleanupExpiredStories();
+  syncPostViewCounts();
 };
