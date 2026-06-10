@@ -1,7 +1,8 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-// Anonymous logs endpoint - /logs/ proxies to backend /api/logs/ via nginx
-const LOGS_PUBLIC = '/logs/client/public';
+// Anonymous logs endpoint — /logs/ proxies to backend /api/logs/ via nginx
+// Uses full URL (not relative) so it works from Firebase hosting
+const LOGS_PUBLIC = `${API_BASE}/logs/client/public`;
 // Authenticated logs endpoint
 const LOGS_AUTH = `${API_BASE}/logs/client`;
 
