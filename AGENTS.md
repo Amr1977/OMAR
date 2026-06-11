@@ -98,11 +98,29 @@ cd backend && npm run build
 cd frontend && npm run build
 ```
 
-## Deployment
-- **Backend**: `cd backend && npm run build && pm2 restart hafsa-backend`
-- **Frontend**: `cd frontend && npm run build && firebase deploy --only hosting`
-- **Schema**: `cd backend && npx prisma db push && npx prisma generate`
-- **Push code**: `git add . && git commit -m "msg" && git push`
+## ⚠️ USER GETS ANGRY WHEN I FORGET THIS — FULL DEPLOY FLOW
+```
+git add . && git commit -m "msg" && git push
+ssh ec2-user@commerce-api.et3am.com
+  cd /home/ec2-user/hafsa && git pull
+  cd backend && npm run build && pm2 restart hafsa-backend
+  cd ../frontend && npm run build && firebase deploy --only hosting
+```
+
+### Step by step (what to actually run):
+1. **Commit & push** from local:
+   ```
+   git add . && git commit -m "message" && git push
+   ```
+2. **SSH & deploy** (single SSH command):
+   ```
+   ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa && git pull && cd backend && npm run build && pm2 restart hafsa-backend && cd ../frontend && npm run build && firebase deploy --only hosting"
+   ```
+   Or separately:
+   - **Backend**: `ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa && git pull && cd backend && npm run build && pm2 restart hafsa-backend"`
+   - **Frontend**: `ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa/frontend && git pull && npm run build && firebase deploy --only hosting"`
+3. **Schema** (only when prisma schema changes):
+   `ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa/backend && npx prisma db push && npx prisma generate"`
 
 ## Branch
 `main` (current working branch)
