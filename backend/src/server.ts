@@ -39,6 +39,7 @@ import logRoutes from './modules/logs/logs.routes';
 import connectionRoutes from './modules/connections/connections.routes';
 import serviceRequestRoutes from './modules/serviceRequests/serviceRequests.routes';
 import searchRoutes from './modules/search/search.routes';
+import versionRoutes from './modules/version/version.routes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -110,6 +111,7 @@ app.use('/api/logs', logRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/service-requests', serviceRequestRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/version', versionRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'NOT_FOUND', message: 'Route not found' });
