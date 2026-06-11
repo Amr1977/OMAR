@@ -36,14 +36,14 @@ const mockRes = () => {
   return res;
 };
 
-function mockUser(overrides = {}) {
+function mockUser(overrides = {}): any {
   return {
     id: 'user-1',
     firebaseUid: 'firebase-uid-1',
     email: 'test@example.com',
     phone: '+201234567890',
     roles: ['SOCIAL'],
-    subscriptionPlan: 'FREE',
+    subscriptionPlan: 'FREE' as any,
     subscriptionExpiry: null,
     isVerified: false,
     isActive: true,
