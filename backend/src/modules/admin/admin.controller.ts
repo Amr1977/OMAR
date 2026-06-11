@@ -356,6 +356,112 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const updateUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const existing = await prisma.user.findUnique({
+      where: { id },
+      include: { profile: true },
+    });
+    if (!existing) return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+
+    const { email, phone, roles, subscriptionPlan, isVerified, isActive, profile } = req.body;
+
+    const data: any = {};
+    if (email !== undefined) data.email = email;
+    if (phone !== undefined) data.phone = phone;
+    if (roles !== undefined) data.roles = roles;
+    if (subscriptionPlan !== undefined) data.subscriptionPlan = subscriptionPlan;
+    if (isVerified !== undefined) data.isVerified = isVerified;
+    if (isActive !== undefined) data.isActive = isActive;
+    if (req.body.isBanned !== undefined) data.isBanned = req.body.isBanned;
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data,
+    });
+
+    if (profile && existing.profile) {
+      const profileData: any = {};
+      if (profile.displayName !== undefined) profileData.displayName = profile.displayName;
+      if (profile.bio !== undefined) profileData.bio = profile.bio;
+      if (profile.tagline !== undefined) profileData.tagline = profile.tagline;
+      if (profile.websiteUrl !== undefined) profileData.websiteUrl = profile.websiteUrl;
+      if (Object.keys(profileData).length > 0) {
+        await prisma.profile.update({
+          where: { id: existing.profile.id },
+          data: profileData,
+        });
+      }
+    }
+
+    await prisma.adminLog.create({
+      data: {
+        adminId: req.userId!,
+        action: 'UPDATE_USER',
+        targetId: id,
+        details: { updated: Object.keys(data) },
+      },
+    });
+
+    const result = await prisma.user.findUnique({
+      where: { id },
+      include: { profile: { select: { id: true, displayName: true, status: true } } },
+    });
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Update user error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to update user' });
+  }
+};
+
+export const createUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const { firebaseUid, email, phone, roles, subscriptionPlan, isVerified, profile } = req.body;
+
+    if (!firebaseUid) {
+      return res.status(400).json({ error: 'VALIDATION', message: 'firebaseUid is required' });
+    }
+
+    const existing = await prisma.user.findUnique({ where: { firebaseUid } });
+    if (existing) {
+      return res.status(409).json({ error: 'CONFLICT', message: 'User with this firebaseUid already exists' });
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        firebaseUid,
+        email,
+        phone,
+        roles: roles || ['SOCIAL'],
+        subscriptionPlan: subscriptionPlan || 'FREE',
+        isVerified: isVerified || false,
+      },
+    });
+
+
+
+    await prisma.adminLog.create({
+      data: {
+        adminId: req.userId!,
+        action: 'CREATE_USER',
+        targetId: user.id,
+      },
+    });
+
+    const result = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: { profile: { select: { id: true, displayName: true, status: true } } },
+    });
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Create user error:', error);
+    return res.status(500).json({ error: 'INTERNAL', message: 'Failed to create user' });
+  }
+};
+
 // ─── E-shop Admin ─────────────────────────────────────────────────────
 export const adminListStores = async (req: AuthRequest, res: Response) => {
   try {

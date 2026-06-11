@@ -243,6 +243,31 @@
       "title": "البلاغات",
       "noReports": "لا توجد بلاغات",
       "resolve": "حل البلاغ"
+    },
+    "userDetail": {
+      "title": "تفاصيل المستخدم",
+      "editUser": "تعديل المستخدم",
+      "subscription": "الاشتراك",
+      "verified": "موثق",
+      "unverified": "غير موثق",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "roles": "الأدوار",
+      "displayName": "الاسم المعروض",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "bio": "السيرة الذاتية",
+      "tagline": "الشعار",
+      "websiteUrl": "رابط الموقع",
+      "makeAdmin": "تعيين كمسؤول",
+      "removeAdmin": "إزالة صلاحية المسؤول",
+      "deleteWarning": "هل أنت متأكد من حذف هذا المستخدم؟ هذا الإجراء لا يمكن التراجع عنه.",
+      "deleteTitle": "حذف المستخدم",
+      "userUpdated": "تم تحديث المستخدم بنجاح",
+      "userDeleted": "تم حذف المستخدم",
+      "adminGranted": "تم منح صلاحية المسؤول",
+      "adminRemoved": "تم إزالة صلاحية المسؤول",
+      "notFound": "المستخدم غير موجود"
     }
   },
   "social": {

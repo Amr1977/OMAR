@@ -30,6 +30,7 @@ import PeopleSearch from './pages/social/PeopleSearch';
 import HafsaStory from './pages/siyar/HafsaStory';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminUserDetail from './pages/admin/AdminUserDetail';
 import AdminProfiles from './pages/admin/AdminProfiles';
 import AdminReports from './pages/admin/AdminReports';
 import AdminPosts from './pages/admin/AdminPosts';
@@ -122,6 +123,7 @@ export default function App() {
         <Route path="feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
         <Route path="admin" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
         <Route path="admin/users" element={<ProtectedRoute roles={['ADMIN']}><AdminUsers /></ProtectedRoute>} />
+        <Route path="admin/users/:id" element={<ProtectedRoute roles={['ADMIN']}><AdminUserDetail /></ProtectedRoute>} />
         <Route path="admin/profiles" element={<ProtectedRoute roles={['ADMIN']}><AdminProfiles /></ProtectedRoute>} />
         <Route path="admin/reports" element={<ProtectedRoute roles={['ADMIN']}><AdminReports /></ProtectedRoute>} />
         <Route path="admin/posts" element={<ProtectedRoute roles={['ADMIN']}><AdminPosts /></ProtectedRoute>} />

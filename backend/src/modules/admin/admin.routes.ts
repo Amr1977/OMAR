@@ -7,6 +7,8 @@ import {
   banUser,
   verifyUser,
   deleteUser,
+  updateUser,
+  createUser,
   getPendingProfiles,
   approveProfile,
   rejectProfile,
@@ -50,6 +52,8 @@ router.get('/dashboard', getDashboard);
 router.get('/users', listUsers);
 router.put('/users/:id/ban', banUser);
 router.put('/users/:id/verify', verifyUser);
+router.put('/users/:id', updateUser);
+router.post('/users', createUser);
 router.delete('/users/:id', deleteUser);
 router.get('/profiles/pending', getPendingProfiles);
 router.put('/profiles/:id/approve', approveProfile);
