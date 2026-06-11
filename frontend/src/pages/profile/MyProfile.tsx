@@ -154,7 +154,7 @@ export default function MyProfile() {
         {/* Header */}
         <div className="flex items-start gap-5 mb-7">
           <UserAvatar
-            photo={profile.photos?.[0]?.url}
+            photo={user?.avatarUrl || profile.photos?.[0]?.url}
             size="lg"
             roles={user?.roles}
             subscriptionPlan={user?.subscriptionPlan}

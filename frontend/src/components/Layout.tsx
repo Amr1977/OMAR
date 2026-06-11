@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../stores/themeStore';
-import { api, photoUrl } from '../lib/api';
+import { api } from '../lib/api';
 import { onNewNotification } from '../lib/socket';
 import UserAvatar from './UserAvatar';
 
@@ -13,16 +13,7 @@ export default function Layout() {
   const { theme, toggle } = useTheme();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (!isAuthenticated) { setProfilePhoto(null); return; }
-    api.profile.getMy().then((p: any) => {
-      const url = p.photos?.[0]?.url || null;
-      setProfilePhoto(url);
-    }).catch(() => {});
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) { setUnreadCount(0); return; }
@@ -153,7 +144,7 @@ export default function Layout() {
                     title="الملف الشخصي"
                   >
                     <UserAvatar
-                      photo={profilePhoto}
+                      photo={user?.avatarUrl || user?.profilePhoto}
                       size="md"
                       roles={user?.roles}
                       subscriptionPlan={user?.subscriptionPlan}
@@ -240,7 +231,7 @@ export default function Layout() {
                 >
                   <div className="shrink-0">
                     <UserAvatar
-                      photo={profilePhoto}
+                      photo={user?.avatarUrl || user?.profilePhoto}
                       size="lg"
                       roles={user?.roles}
                       subscriptionPlan={user?.subscriptionPlan}
