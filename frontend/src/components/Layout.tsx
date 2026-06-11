@@ -97,8 +97,13 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
-              <Link to="/" className="text-2xl font-bold text-[var(--color-primary)] font-display">
-                {t('app.name')}
+              <Link to="/" className="flex flex-col leading-tight">
+                <span className="text-2xl font-bold text-[var(--color-primary)] font-display">
+                  {t('app.name')}
+                </span>
+                <span className="text-[10px] text-[var(--color-muted)] font-mono tracking-wider" dir="ltr">
+                  v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
+                </span>
               </Link>
             </div>
 
