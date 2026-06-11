@@ -3,6 +3,8 @@
   <p><strong>A full-featured social platform for men — marriage introductions, social networking, service marketplace, and e-commerce</strong></p>
   <p>شبكة اجتماعية متكاملة للرجال</p>
   <br>
+  <img src="frontend/public/og/og-main.png" alt="OMAR Platform" width="600"/>
+  <br><br>
 </div>
 
 **OMAR** is a production-grade web platform serving as a comprehensive social network for men. It spans four interconnected verticals: a marriage introduction system with guardian oversight, a general social media feed with rich content features, a service marketplace connecting providers with consumers, and an e-commerce engine for user-run storefronts. Named after **Omar ibn al-Khattab** (عمر بن الخطاب), the platform emphasizes strength, justice, and community.
@@ -65,6 +67,10 @@ The platform began as a marriage-focused application (codename *Hafsa*, after Ha
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+<div align="center">
+  <img src="frontend/public/og/og-banner.png" alt="OMAR Architecture Overview" width="100%"/>
+</div>
+
 ---
 
 ## Features
@@ -124,6 +130,10 @@ One-time donations follow the same payment and verification flow.
 ### Internationalization & UI
 
 The interface supports **4 languages** (Arabic RTL, English, French, Urdu) with full right-to-left layout via Tailwind RTL plugin. A complete **dark mode** implementation uses CSS custom properties and class-based toggling with system preference detection. The UI is mobile-first responsive with a slide-out navigation drawer.
+
+<div align="center">
+  <img src="frontend/public/og/og-square.png" alt="OMAR" width="400"/>
+</div>
 
 ---
 
