@@ -73,10 +73,23 @@ export default function ServiceList() {
         <div className="text-center py-12 text-[#6B7280] dark:text-gray-400">جاري التحميل...</div>
       ) : services.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-[#6B7280] dark:text-gray-400 mb-4">لا توجد خدمات حالياً</p>
-          <Link to="/services/new"
-            className="px-6 py-3 bg-[#1B4332] dark:bg-[#DAA520] text-white dark:text-[#1B4332] rounded-xl font-medium"
-          >أضف أول خدمة</Link>
+          <div className="w-16 h-16 bg-[#D8F3DC] dark:bg-[#1B4332]/40 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-[#1B4332] dark:text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <p className="text-[#6B7280] dark:text-gray-400 mb-1">لا توجد خدمات حالياً</p>
+          <p className="text-sm text-[#9CA3AF] dark:text-gray-500 mb-5">كن أول من يضيف خدمة أو تصفح طلبات الخدمة</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link to="/services/new"
+              className="px-5 py-2.5 bg-[#1B4332] dark:bg-[#DAA520] text-white dark:text-[#1B4332] rounded-xl font-medium hover:bg-[#2D6A4F] dark:hover:bg-[#E6C84A] transition-colors">
+              أضف أول خدمة
+            </Link>
+            <Link to="/service-requests"
+              className="px-5 py-2.5 border border-[#E5E7EB] dark:border-gray-600 text-[#374151] dark:text-gray-300 rounded-xl font-medium hover:border-[#1B4332] dark:hover:border-[#DAA520] transition-colors">
+              طلبات الخدمة
+            </Link>
+          </div>
         </div>
       ) : showMap ? (
         <div className="h-[600px] rounded-xl overflow-hidden border border-[#E5E7EB] dark:border-gray-700">

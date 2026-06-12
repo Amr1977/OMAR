@@ -75,24 +75,6 @@ export default function BrideForm() {
 
   if (loading) return <div className="text-center py-12 text-[#6B7280]">جاري التحميل...</div>;
 
-  if (isOnboarding) {
-    return (
-      <div className="max-w-3xl mx-auto py-6" dir="rtl">
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-5 mb-6">
-          <h2 className="text-lg font-bold text-amber-800 dark:text-amber-200 mb-2">مرحباً بك ولي الأمر 👋</h2>
-          <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-            هذا النموذج يساعدك في إضافة بيانات المولية (التي ترغب في تزويجها). بعد الحفظ، ستتمكن من تصفح الملفات الشخصية للعرسان المتاحين والتواصل معهم.
-          </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <h1 className="text-2xl font-bold text-[#1B4332] dark:text-gray-100 mb-2">إضافة سجل عروس جديد</h1>
-          <p className="text-sm text-[#6B7280] dark:text-gray-400">املأ البيانات التالية لإضافة أول سجل عروس. يمكنك تخطي الحقول غير المطلوبة.</p>
-        </div>
-        {renderForm()}
-      </div>
-    );
-  }
-
   const renderStep = () => {
     switch (step) {
       case 0: return (
@@ -418,6 +400,14 @@ export default function BrideForm() {
 
   const renderForm = () => (
     <div className="max-w-3xl mx-auto py-6" dir="rtl">
+      {isOnboarding && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-5 mb-6">
+          <h2 className="text-lg font-bold text-amber-800 dark:text-amber-200 mb-2">مرحباً بك ولي الأمر 👋</h2>
+          <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
+            هذا النموذج يساعدك في إضافة بيانات المولية (التي ترغب في تزويجها). بعد الحفظ، ستتمكن من تصفح الملفات الشخصية للعرسان المتاحين والتواصل معهم.
+          </p>
+        </div>
+      )}
       <h1 className="text-2xl font-bold text-[#1B4332] dark:text-gray-100 mb-6">
         {isEdit ? 'تعديل سجل عروس' : 'إضافة سجل عروس جديد'}
       </h1>
@@ -476,15 +466,5 @@ export default function BrideForm() {
     </div>
   );
 
-  return isOnboarding ? (
-    <div className="max-w-3xl mx-auto py-6" dir="rtl">
-      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-5 mb-6">
-        <h2 className="text-lg font-bold text-amber-800 dark:text-amber-200 mb-2">مرحباً بك ولي الأمر 👋</h2>
-        <p className="text-sm text-amber-700 dark:text-amber-300 leading-relaxed">
-          هذا النموذج يساعدك في إضافة بيانات المولية (التي ترغب في تزويجها). بعد الحفظ، ستتمكن من تصفح الملفات الشخصية للعرسان المتاحين والتواصل معهم.
-        </p>
-      </div>
-      {renderForm()}
-    </div>
-  ) : renderForm();
+  return renderForm();
 }
