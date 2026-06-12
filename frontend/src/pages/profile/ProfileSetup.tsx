@@ -93,6 +93,7 @@ export default function ProfileSetup() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(!!editId);
   const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     if (!editId) return;
@@ -215,9 +216,10 @@ export default function ProfileSetup() {
         }
         await api.profile.submit(profile.id);
       }
+      await api.put('/auth/onboarding', { step: 'profile_setup', completed: true }).catch(() => {});
       const user = await api.auth.getMe();
       setUser(user);
-      navigate(isGuardian ? '/browse' : '/profile/my');
+      setSubmitted(true);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -657,6 +659,44 @@ export default function ProfileSetup() {
   };
 
   if (initialLoading) return <div className="text-center py-8">{t('common.loading')}</div>;
+
+  if (submitted) {
+    return (
+      <div className="max-w-lg mx-auto text-center py-12">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-[#E5E7EB] dark:border-gray-700 p-8 md:p-10">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          {isGuardian ? (
+            <>
+              <h2 className="text-xl font-bold text-[#1B4332] dark:text-gray-100 mb-3">تم إعداد الملف بنجاح</h2>
+              <p className="text-sm text-[#6B7280] dark:text-gray-400 mb-6">يمكنك الآن تصفح الملفات الشخصية للعرسان المتاحين.</p>
+              <button onClick={() => navigate('/browse')}
+                className="px-6 py-3 bg-[#1B4332] dark:bg-[#DAA520] text-white dark:text-[#1B4332] rounded-xl font-semibold hover:bg-[#2D6A4F] dark:hover:bg-[#E6C84A] transition-colors">
+                تصفح العرسان
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold text-[#1B4332] dark:text-gray-100 mb-3">تم إرسال ملفك للمراجعة ✓</h2>
+              <p className="text-sm text-[#6B7280] dark:text-gray-400 mb-2">
+                سيتم مراجعة ملفك الشخصي آلياً بواسطة الذكاء الاصطناعي. تستغرق المراجعة بضع دقائق.
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-6">
+                يمكنك متابعة حالة الملف من لوحة التحكم
+              </p>
+              <button onClick={() => navigate('/groom-dashboard')}
+                className="px-6 py-3 bg-[#1B4332] dark:bg-[#DAA520] text-white dark:text-[#1B4332] rounded-xl font-semibold hover:bg-[#2D6A4F] dark:hover:bg-[#E6C84A] transition-colors">
+                الذهاب إلى لوحة التحكم
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">

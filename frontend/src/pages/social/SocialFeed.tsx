@@ -17,6 +17,19 @@ export default function SocialFeed() {
   const currentUserId = currentUser?.id;
   const queryClient = useQueryClient();
 
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (!currentUser) return false;
+    const hasRole = currentUser.roles?.some((r: string) => r === 'GROOM' || r === 'GUARDIAN');
+    if (hasRole) return false;
+    return !localStorage.getItem('onboarding_welcome_shown');
+  });
+
+  const dismissWelcome = () => {
+    localStorage.setItem('onboarding_welcome_shown', '1');
+    api.put('/auth/onboarding', { step: 'first_post' }).catch(() => {});
+    setShowWelcome(false);
+  };
+
   const [newPost, setNewPost] = useState('');
   const [postPrivacy, setPostPrivacy] = useState<'PUBLIC' | 'PRIVATE' | 'CONNECTIONS' | 'SELECTED'>('PUBLIC');
   const [tab, setTab] = useState<'feed' | 'explore'>('feed');
@@ -356,6 +369,27 @@ export default function SocialFeed() {
         </div>
       </div>
 
+      {/* Welcome modal */}
+      {showWelcome && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6 text-center">
+            <div className="w-16 h-16 bg-[#1B4332]/10 dark:bg-[#DAA520]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-[#1B4332] dark:text-[#DAA520]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#1B4332] dark:text-gray-100 mb-3">مرحباً بك في عمر! 👋</h2>
+            <p className="text-sm text-[#6B7280] dark:text-gray-400 mb-6 leading-relaxed">
+              هذه صفحة المنشورات الاجتماعية. يمكنك نشر صور وفيديو، التفاعل مع المجتمع، متابعة المستخدمين، اكتشاف خدمات ومتاجر، والتواصل مع الأصدقاء. ابدأ بنشر أول منشور أو تصفح الأقسام الأخرى من القائمة.
+            </p>
+            <button onClick={dismissWelcome}
+              className="px-6 py-2.5 bg-[#1B4332] dark:bg-[#DAA520] text-white dark:text-[#1B4332] rounded-xl font-semibold hover:bg-[#2D6A4F] dark:hover:bg-[#E6C84A] transition-colors">
+              حسناً، لنبدأ!
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Posts */}
       {isLoading ? (
         <div className="space-y-4">
@@ -364,7 +398,15 @@ export default function SocialFeed() {
       ) : posts.length === 0 ? (
         <div className="text-center py-16 text-[var(--color-muted)]">
           <p className="text-lg mb-2">لا توجد منشورات</p>
-          <p className="text-sm">{tab === 'feed' ? 'تابع مستخدمين آخرين لرؤية منشوراتهم' : 'كن أول من ينشر!'}</p>
+          <p className="text-sm mb-4">{tab === 'feed' ? 'تابع مستخدمين آخرين لرؤية منشوراتهم' : 'كن أول من ينشر!'}</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link to="/social/people" className="px-5 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-light)] transition-colors">
+              اكتشف أشخاصاً
+            </Link>
+            <Link to="/search" className="px-5 py-2 border border-[var(--color-border)] text-[var(--color-muted)] rounded-lg text-sm font-medium hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-colors">
+              تصفح الأقسام
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
