@@ -51,18 +51,22 @@ export default function UserPublicProfile() {
   useEffect(() => { loadPosts(); }, [userId]);
 
   const handleFollow = async () => {
-    await api.social.toggleFollow(userId!);
-    setFollowing(f => !f);
-    setProfile((p: any) => ({
-      ...p,
-      _count: { ...p._count, followers: p._count.followers + (following ? -1 : 1) }
-    }));
+    try {
+      await api.social.toggleFollow(userId!);
+      setFollowing(f => !f);
+      setProfile((p: any) => ({
+        ...p,
+        _count: { ...p._count, followers: p._count.followers + (following ? -1 : 1) }
+      }));
+    } catch {}
   };
 
   const handleBlock = async () => {
-    await api.social.toggleBlock(userId!);
-    setBlocked(b => !b);
-    setMenuOpen(false);
+    try {
+      await api.social.toggleBlock(userId!);
+      setBlocked(b => !b);
+      setMenuOpen(false);
+    } catch {}
   };
 
   const handleLike = async (postId: string) => {

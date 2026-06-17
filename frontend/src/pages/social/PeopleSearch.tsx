@@ -24,12 +24,14 @@ export default function PeopleSearch() {
   };
 
   const handleFollow = async (userId: string) => {
-    await api.social.toggleFollow(userId);
-    setFollowing(prev => {
-      const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId); else next.add(userId);
-      return next;
-    });
+    try {
+      await api.social.toggleFollow(userId);
+      setFollowing(prev => {
+        const next = new Set(prev);
+        if (next.has(userId)) next.delete(userId); else next.add(userId);
+        return next;
+      });
+    } catch {}
   };
 
   const UserCard = ({ profile }: { profile: any }) => (

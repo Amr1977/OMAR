@@ -162,6 +162,20 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
     const cursor = req.query.cursor as string | undefined;
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
 
+    if (!req.userId) {
+      const posts = await prisma.post.findMany({
+        where: { privacy: 'PUBLIC' as any, user: { isActive: true } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        include: postInclude(''),
+      });
+      const hasMore = posts.length > limit;
+      if (hasMore) posts.pop();
+      const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+      return res.json({ posts, nextCursor });
+    }
+
     const [follows, blockedRows] = await Promise.all([
       prisma.follow.findMany({
         where: { followerId: req.userId },
@@ -208,6 +222,20 @@ export const getExploreFeed = async (req: AuthRequest, res: Response) => {
   try {
     const cursor = req.query.cursor as string | undefined;
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
+
+    if (!req.userId) {
+      const posts = await prisma.post.findMany({
+        where: { privacy: 'PUBLIC' as any, user: { isActive: true } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        include: postInclude(''),
+      });
+      const hasMore = posts.length > limit;
+      if (hasMore) posts.pop();
+      const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+      return res.json({ posts, nextCursor });
+    }
 
     const blockedRows = await prisma.block.findMany({
       where: { OR: [{ blockerId: req.userId }, { blockedId: req.userId }] },
@@ -509,7 +537,8 @@ export const toggleFollow = async (req: AuthRequest, res: Response) => {
 
 export const getFollowers = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req.params.userId as string) || req.userId!;
+    const userId = (req.params.userId as string) || req.userId;
+    if (!userId) return res.status(400).json({ error: 'USER_ID_REQUIRED' });
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
     const [followers, total] = await Promise.all([
@@ -531,7 +560,8 @@ export const getFollowers = async (req: AuthRequest, res: Response) => {
 
 export const getFollowing = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req.params.userId as string) || req.userId!;
+    const userId = (req.params.userId as string) || req.userId;
+    if (!userId) return res.status(400).json({ error: 'USER_ID_REQUIRED' });
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(50, parseInt(req.query.limit as string) || 20);
     const [following, total] = await Promise.all([
@@ -553,8 +583,8 @@ export const getFollowing = async (req: AuthRequest, res: Response) => {
 
 export const getUserPosts = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req.params.userId as string) || req.userId!;
-    const viewerId = req.userId!;
+    const userId = req.params.userId as string;
+    const viewerId = req.userId;
 
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -568,14 +598,22 @@ export const getUserPosts = async (req: AuthRequest, res: Response) => {
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
     const isOwner = viewerId === userId;
 
-    const followExists = isOwner ? false : await prisma.follow.findUnique({
-      where: { followerId_followingId: { followerId: viewerId, followingId: userId } },
-    });
-    const visibility: any[] = [{ privacy: 'PUBLIC' as any }, { privacy: 'SELECTED' as any, allowedUsers: { some: { userId: viewerId } } }];
-    if (followExists) visibility.push({ privacy: 'CONNECTIONS' as any });
-    const where = isOwner ? { userId } : { userId, OR: visibility };
+    let where: any;
+    if (isOwner) {
+      where = { userId };
+    } else {
+      const visibility: any[] = [{ privacy: 'PUBLIC' as any }];
+      if (viewerId) {
+        visibility.push({ privacy: 'SELECTED' as any, allowedUsers: { some: { userId: viewerId } } });
+        const followExists = await prisma.follow.findUnique({
+          where: { followerId_followingId: { followerId: viewerId, followingId: userId } },
+        });
+        if (followExists) visibility.push({ privacy: 'CONNECTIONS' as any });
+      }
+      where = { userId, OR: visibility };
+    }
     const [posts, total] = await Promise.all([
-      prisma.post.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit, include: postInclude(viewerId) }),
+      prisma.post.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit, include: postInclude(viewerId || '') }),
       prisma.post.count({ where }),
     ]);
     res.json({ posts, total, page, totalPages: Math.ceil(total / limit) });
@@ -587,7 +625,8 @@ export const getUserPosts = async (req: AuthRequest, res: Response) => {
 
 export const getReputation = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req.params.userId as string) || req.userId!;
+    const userId = (req.params.userId as string) || req.userId;
+    if (!userId) return res.status(400).json({ error: 'USER_ID_REQUIRED' });
     const [likesAgg, postCount, followerCount] = await Promise.all([
       prisma.postLike.aggregate({ where: { post: { userId } }, _count: true }),
       prisma.post.count({ where: { userId } }),
@@ -916,14 +955,20 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
     if (!q || (q as string).trim().length < 2) {
       return res.status(400).json({ error: 'QUERY_TOO_SHORT' });
     }
-    const blockedIds = await prisma.block.findMany({
-      where: { OR: [{ blockerId: req.userId }, { blockedId: req.userId }] },
-      select: { blockerId: true, blockedId: true },
-    }).then(blocks => blocks.flatMap(b => [b.blockerId, b.blockedId]).filter(id => id !== req.userId));
+
+    let excludeIds: string[] = [];
+    if (req.userId) {
+      const blockedIds = await prisma.block.findMany({
+        where: { OR: [{ blockerId: req.userId }, { blockedId: req.userId }] },
+        select: { blockerId: true, blockedId: true },
+      }).then(blocks => blocks.flatMap(b => [b.blockerId, b.blockedId]).filter(id => id !== req.userId));
+      excludeIds = [...new Set(blockedIds)];
+    }
+
     const profiles = await prisma.profile.findMany({
       where: {
         status: 'APPROVED',
-        userId: { notIn: [...new Set(blockedIds)] },
+        userId: { notIn: excludeIds },
         displayName: { contains: q as string, mode: 'insensitive' },
         user: { isActive: true },
       },
@@ -933,12 +978,15 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
         user: { select: { id: true, roles: true, avatarUrl: true, subscriptionPlan: true, isOnline: true, isVerified: true } },
       },
     });
-    const followingSet = new Set(
-      (await prisma.follow.findMany({
+
+    let followingSet = new Set<string>();
+    if (req.userId && profiles.length > 0) {
+      const follows = await prisma.follow.findMany({
         where: { followerId: req.userId, followingId: { in: profiles.map(p => p.userId) } },
         select: { followingId: true },
-      })).map(f => f.followingId)
-    );
+      });
+      followingSet = new Set(follows.map(f => f.followingId));
+    }
     return res.json(profiles.map(p => ({ ...p, isFollowing: followingSet.has(p.userId) })));
   } catch (error) {
     console.error('Search users error:', error);
@@ -948,6 +996,26 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
 
 export const getSuggestedUsers = async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.userId) {
+      const popular = await prisma.follow.groupBy({
+        by: ['followingId'],
+        where: { following: { isActive: true } },
+        _count: { followingId: true },
+        orderBy: { _count: { followingId: 'desc' } },
+        take: 8,
+      });
+      const userIds = popular.map(p => p.followingId);
+      const profiles = await prisma.profile.findMany({
+        where: { userId: { in: userIds }, status: 'APPROVED', user: { isActive: true } },
+        include: {
+          photos: { where: { isPrimary: true }, take: 1 },
+          user: { select: { id: true, roles: true, avatarUrl: true, subscriptionPlan: true, isVerified: true, _count: { select: { followers: true } } } },
+        },
+        take: 8,
+      });
+      return res.json(profiles);
+    }
+
     const alreadyFollowing = await prisma.follow.findMany({
       where: { followerId: req.userId },
       select: { followingId: true },
@@ -1098,6 +1166,32 @@ export const createStory = async (req: AuthRequest, res: Response) => {
 export const getStoriesFeed = async (req: AuthRequest, res: Response) => {
   try {
     const now = new Date();
+
+    if (!req.userId) {
+      const stories = await prisma.story.findMany({
+        where: {
+          expiresAt: { gt: now },
+          user: { isActive: true },
+          privacy: 'PUBLIC',
+        },
+        include: {
+          user: { select: { id: true, roles: true, avatarUrl: true, subscriptionPlan: true, isOnline: true, profile: { select: { displayName: true, photos: { where: { isPrimary: true }, take: 1 } } } } },
+          _count: { select: { views: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      const grouped = new Map<string, any>();
+      stories.forEach(story => {
+        const uid = story.userId;
+        if (!grouped.has(uid)) {
+          grouped.set(uid, { user: story.user, stories: [], hasUnviewed: false });
+        }
+        const entry = grouped.get(uid);
+        entry.stories.push(story);
+      });
+      return res.json([...grouped.values()]);
+    }
+
     const follows = await prisma.follow.findMany({
       where: { followerId: req.userId },
       select: { followingId: true },

@@ -24,6 +24,8 @@ export default function SocialFeed() {
     return !localStorage.getItem('onboarding_welcome_shown');
   });
 
+  const isAuth = !!currentUser;
+
   const dismissWelcome = () => {
     localStorage.setItem('onboarding_welcome_shown', '1');
     api.put('/auth/onboarding', { step: 'first_post' }).catch(() => {});
@@ -308,10 +310,10 @@ export default function SocialFeed() {
         </button>
       </div>
 
-      <StoriesBar />
+      {isAuth && <StoriesBar />}
 
       {/* Create post */}
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-6">
+      {isAuth && <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-6">
         <textarea
           value={newPost}
           onChange={(e) => setNewPost(e.target.value)}
@@ -367,7 +369,7 @@ export default function SocialFeed() {
             {submitting ? 'جاري النشر...' : uploadingCount > 0 ? `جاري الرفع...` : 'نشر'}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* Welcome modal */}
       {showWelcome && (

@@ -41,10 +41,10 @@ export default function Layout() {
 
   const navLinks = [
     { path: '/', label: t('nav.home') },
+    { path: '/social', label: 'المنشورات' },
+    { path: '/social/people', label: 'اكتشف أشخاصاً' },
     ...(isAuthenticated
       ? [
-          { path: '/social', label: 'المنشورات' },
-          { path: '/social/people', label: 'اكتشف أشخاصاً' },
           { path: '/services', label: 'الخدمات' },
           { path: '/service-requests', label: 'طلبات الخدمة' },
           { path: '/search', label: 'بحث' },
