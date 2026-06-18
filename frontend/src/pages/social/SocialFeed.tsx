@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { api, photoUrl, isVideoUrl } from '../../lib/api';
+import { api, photoUrl, isVideoUrl, isAudioUrl } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import { onNewPostInFeed, emitPostCreated } from '../../lib/socket';
 import { renderRichText } from '../../lib/richText';
@@ -51,7 +51,8 @@ export default function SocialFeed() {
   const [shareContent, setShareContent] = useState('');
   const [sharingSubmitting, setSharingSubmitting] = useState(false);
   const [menuPostId, setMenuPostId] = useState<string | null>(null);
-  const [reactionPickerPostId, setReactionPickerPostId] = useState<string | null>(null);
+  const [hoverReactionPostId, setHoverReactionPostId] = useState<string | null>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -481,6 +482,8 @@ export default function SocialFeed() {
                         <div key={i} className="relative group">
                           {isVideoUrl(url) ? (
                             <video src={photoUrl(url)} className="w-20 h-20 object-cover rounded-lg border border-[var(--color-border)]" />
+                          ) : isAudioUrl(url) ? (
+                            <div className="w-20 h-20 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg border border-[var(--color-border)] text-lg">🎵</div>
                           ) : (
                             <img src={photoUrl(url)} alt="" className="w-20 h-20 object-cover rounded-lg border border-[var(--color-border)]" />
                           )}
@@ -556,6 +559,8 @@ export default function SocialFeed() {
                     {post.mediaUrls.map((url: string, i: number) => (
                       isVideoUrl(url) ? (
                         <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-[70vh] object-contain bg-gray-100 dark:bg-gray-800" />
+                      ) : isAudioUrl(url) ? (
+                        <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                       ) : (
                         <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full max-h-[70vh] object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={(e) => { e.preventDefault(); setViewerImg(photoUrl(url)); }} />
                       )
@@ -580,6 +585,8 @@ export default function SocialFeed() {
                           {post.sharedPost.mediaUrls.map((url: string, i: number) => (
                             isVideoUrl(url) ? (
                             <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800" />
+                          ) : isAudioUrl(url) ? (
+                            <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                           ) : (
                             <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={(e) => { e.preventDefault(); setViewerImg(photoUrl(url)); }} />
                             )
@@ -594,15 +601,28 @@ export default function SocialFeed() {
 
               {/* Actions */}
               <div className="flex items-center gap-6 pt-3 border-t border-[var(--color-border)]">
-                <div className="relative">
-                  <button onClick={() => setReactionPickerPostId(reactionPickerPostId === post.id ? null : post.id)} className={`flex items-center gap-1.5 text-sm transition-colors ${post.likes?.[0] ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
-                    <span className="text-base leading-none">{post.likes?.[0]?.emoji || '♡'}</span>
-                    {post._count.likes}
-                  </button>
-                  {reactionPickerPostId === post.id && (
+                <div className="flex items-center gap-1 relative"
+                  onMouseEnter={() => {
+                    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                    hoverTimeoutRef.current = setTimeout(() => setHoverReactionPostId(post.id), 300);
+                  }}
+                  onMouseLeave={() => {
+                    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                    hoverTimeoutRef.current = setTimeout(() => setHoverReactionPostId(null), 600);
+                  }}
+                >
+                  {post.reactions?.map((r: any) => (
+                    <button key={r.emoji} onClick={() => handleReaction(post.id, r.emoji)}
+                      className={`text-sm px-1.5 py-0.5 rounded-lg transition-colors ${r.reacted ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                    >
+                      {r.emoji}<span className="text-xs mr-0.5">{r.count}</span>
+                    </button>
+                  ))}
+                  <button onClick={() => { if (hoverReactionPostId !== post.id) { setHoverReactionPostId(post.id); } else { setHoverReactionPostId(null); } }} className="text-sm px-1.5 py-0.5 rounded-lg text-[var(--color-muted)] hover:bg-gray-100 dark:hover:bg-gray-700">+</button>
+                  {hoverReactionPostId === post.id && (
                     <EmojiPicker
-                      onSelect={(emoji) => { handleReaction(post.id, emoji); setReactionPickerPostId(null); }}
-                      onClose={() => setReactionPickerPostId(null)}
+                      onSelect={(emoji) => { handleReaction(post.id, emoji); setHoverReactionPostId(null); }}
+                      onClose={() => setHoverReactionPostId(null)}
                     />
                   )}
                 </div>

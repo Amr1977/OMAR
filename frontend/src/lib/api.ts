@@ -11,6 +11,9 @@ export const photoUrl = (url: string | null | undefined): string => {
 export const isVideoUrl = (url: string): boolean =>
   url.startsWith('data:video/') || /\.(mp4|webm|ogg|mov)$/i.test(url);
 
+export const isAudioUrl = (url: string): boolean =>
+  url.startsWith('data:audio/') || /\.(mp3|wav|ogg|webm)$/i.test(url);
+
 let token: string | null = null;
 
 export const setToken = (t: string | null) => {

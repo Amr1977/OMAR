@@ -20,16 +20,16 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute bottom-10 left-0 z-50" dir="ltr">
-      <div className="shadow-2xl rounded-2xl overflow-hidden border border-[var(--color-border)]">
+    <div ref={ref} className="absolute z-50" style={{ bottom: '100%', left: 0, marginBottom: 8 }} dir="ltr">
+      <div className="rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-2xl">
         <Picker
           onEmojiClick={({ emoji }) => {
             onSelect(emoji);
             onClose();
           }}
           searchPlaceholder="بحث..."
-          width={320}
-          height={400}
+          width={300}
+          height={360}
         />
       </div>
     </div>

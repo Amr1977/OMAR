@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, photoUrl } from '../../lib/api';
+import { api, photoUrl, isVideoUrl, isAudioUrl } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import ImageViewer from '../../components/ImageViewer';
 import UserAvatar from '../../components/UserAvatar';
@@ -78,7 +78,7 @@ export default function MyProfile() {
     } catch (e) {} finally { setSharingSubmitting(false); }
   };
 
-  const isVideo = (url: string) => url.startsWith('data:video/');
+
 
   const statusColors: Record<string, string> = {
     APPROVED: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
@@ -383,10 +383,12 @@ export default function MyProfile() {
                       style={{ gridTemplateColumns: post.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}
                     >
                       {post.mediaUrls.map((url: string, i: number) => (
-                        isVideo(url) ? (
-                          <video key={i} src={url} controls className="rounded-xl w-full h-48 object-cover" />
+                        isVideoUrl(url) ? (
+                          <video key={i} src={photoUrl(url)} controls className="rounded-xl w-full h-48 object-cover" />
+                        ) : isAudioUrl(url) ? (
+                          <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                         ) : (
-                          <img key={i} src={url} alt="" className="rounded-xl w-full h-48 object-cover cursor-pointer transition-transform duration-300 hover:scale-[1.02]" onClick={() => setViewerImg(url)} />
+                          <img key={i} src={photoUrl(url)} alt="" className="rounded-xl w-full h-48 object-cover cursor-pointer transition-transform duration-300 hover:scale-[1.02]" onClick={() => setViewerImg(url)} />
                         )
                       ))}
                     </div>
@@ -406,10 +408,12 @@ export default function MyProfile() {
                       {post.sharedPost.mediaUrls?.length > 0 && (
                         <div className="grid gap-1 mt-2" style={{ gridTemplateColumns: post.sharedPost.mediaUrls.length > 1 ? '1fr 1fr' : '1fr' }}>
                           {post.sharedPost.mediaUrls.map((url: string, i: number) => (
-                            isVideo(url) ? (
-                              <video key={i} src={url} controls className="rounded-lg w-full h-24 object-cover" />
+                            isVideoUrl(url) ? (
+                              <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full h-24 object-cover" />
+                            ) : isAudioUrl(url) ? (
+                              <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                             ) : (
-                              <img key={i} src={url} alt="" className="rounded-lg w-full h-24 object-cover" />
+                              <img key={i} src={photoUrl(url)} alt="" className="rounded-lg w-full h-24 object-cover" />
                             )
                           ))}
                         </div>

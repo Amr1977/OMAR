@@ -71,6 +71,42 @@ const postIncludeFull = (userId: string) => ({
   allowedUsers: { include: { user: { select: { id: true, profile: { select: { displayName: true } } } } } },
 } as const);
 
+const addReactionsToPosts = async (posts: any[], userId?: string): Promise<void> => {
+  const postIds = posts.map(p => p.id).filter(Boolean);
+  if (postIds.length === 0) return;
+  const [groups, userLikes] = await Promise.all([
+    prisma.postLike.groupBy({
+      by: ['postId', 'emoji'],
+      _count: { emoji: true },
+      where: { postId: { in: postIds } },
+    }),
+    userId ? prisma.postLike.findMany({
+      where: { postId: { in: postIds }, userId },
+      select: { postId: true, emoji: true },
+    }) : Promise.resolve([]),
+  ]);
+  const userReacted: Record<string, Set<string>> = {};
+  for (const l of userLikes) {
+    if (!userReacted[l.postId]) userReacted[l.postId] = new Set();
+    userReacted[l.postId].add(l.emoji);
+  }
+  const grouped: Record<string, { emoji: string; count: number; reacted: boolean }[]> = {};
+  for (const g of groups) {
+    if (!grouped[g.postId]) grouped[g.postId] = [];
+    grouped[g.postId].push({
+      emoji: g.emoji,
+      count: g._count.emoji,
+      reacted: userReacted[g.postId]?.has(g.emoji) || false,
+    });
+  }
+  for (const pid of postIds) {
+    if (grouped[pid]) grouped[pid].sort((a, b) => b.count - a.count);
+  }
+  for (const post of posts) {
+    post.reactions = (grouped[post.id] || []).slice(0, 3);
+  }
+};
+
 const parseAndSaveHashtags = async (postId: string, content: string): Promise<void> => {
   const tagMatches = content.match(/#[\u0600-\u06FFa-zA-Z0-9_]+/g) || [];
   const tags = [...new Set(tagMatches.map(t => t.slice(1).toLowerCase()))];
@@ -170,10 +206,11 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         include: postInclude(''),
       });
-      const hasMore = posts.length > limit;
-      if (hasMore) posts.pop();
-      const nextCursor = hasMore ? posts[posts.length - 1].id : null;
-      return res.json({ posts, nextCursor });
+    const hasMore = posts.length > limit;
+    if (hasMore) posts.pop();
+    const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+    await addReactionsToPosts(posts, req.userId);
+    return res.json({ posts, nextCursor });
     }
 
     const [follows, blockedRows] = await Promise.all([
@@ -210,6 +247,7 @@ export const getFeed = async (req: AuthRequest, res: Response) => {
     const hasMore = posts.length > limit;
     if (hasMore) posts.pop();
     const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+    await addReactionsToPosts(posts, req.userId);
 
     res.json({ posts, nextCursor });
   } catch (error) {
@@ -231,10 +269,11 @@ export const getExploreFeed = async (req: AuthRequest, res: Response) => {
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         include: postInclude(''),
       });
-      const hasMore = posts.length > limit;
-      if (hasMore) posts.pop();
-      const nextCursor = hasMore ? posts[posts.length - 1].id : null;
-      return res.json({ posts, nextCursor });
+    const hasMore = posts.length > limit;
+    if (hasMore) posts.pop();
+    const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+    await addReactionsToPosts(posts, req.userId);
+    return res.json({ posts, nextCursor });
     }
 
     const blockedRows = await prisma.block.findMany({
@@ -263,6 +302,7 @@ export const getExploreFeed = async (req: AuthRequest, res: Response) => {
     const hasMore = posts.length > limit;
     if (hasMore) posts.pop();
     const nextCursor = hasMore ? posts[posts.length - 1].id : null;
+    await addReactionsToPosts(posts, req.userId);
 
     res.json({ posts, nextCursor });
   } catch (error) {
@@ -290,6 +330,7 @@ export const getPost = async (req: AuthRequest, res: Response) => {
       }).catch(() => {});
     }
 
+    await addReactionsToPosts([post], req.userId);
     res.json(post);
   } catch (error) {
     console.error('Get post error:', error);
@@ -622,6 +663,7 @@ export const getUserPosts = async (req: AuthRequest, res: Response) => {
       prisma.post.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit, include: postInclude(viewerId || '') }),
       prisma.post.count({ where }),
     ]);
+    await addReactionsToPosts(posts, req.userId);
     res.json({ posts, total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Get user posts error:', error);
@@ -808,7 +850,9 @@ export const getSavedPosts = async (req: AuthRequest, res: Response) => {
       }),
       prisma.postSave.count({ where: { userId: req.userId } }),
     ]);
-    return res.json({ posts: saves.map(s => s.post), total, page, totalPages: Math.ceil(total / limit) });
+    const posts = saves.map(s => s.post);
+    await addReactionsToPosts(posts, req.userId);
+    return res.json({ posts, total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Get saved posts error:', error);
     return res.status(500).json({ error: 'INTERNAL' });
@@ -1097,6 +1141,7 @@ export const getHashtagFeed = async (req: AuthRequest, res: Response) => {
         where: { privacy: 'PUBLIC' as any, hashtags: { some: { hashtagId: hashtag.id } } },
       }),
     ]);
+    await addReactionsToPosts(posts, req.userId);
     return res.json({ hashtag, posts, total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Get hashtag feed error:', error);

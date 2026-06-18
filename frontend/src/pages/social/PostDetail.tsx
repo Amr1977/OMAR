@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, photoUrl, isVideoUrl } from '../../lib/api';
+import { api, photoUrl, isVideoUrl, isAudioUrl } from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import { renderRichText } from '../../lib/richText';
 import ImageViewer from '../../components/ImageViewer';
@@ -32,7 +32,8 @@ export default function PostDetail() {
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const scrolledToComment = useRef(false);
-  const [reactionPickerTarget, setReactionPickerTarget] = useState<{ type: 'post' | 'comment'; id: string } | null>(null);
+  const [hoverReactionTarget, setHoverReactionTarget] = useState<{ type: 'post' | 'comment'; id: string } | null>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -182,15 +183,24 @@ export default function PostDetail() {
           </div>
           <div className="flex items-center gap-3 mt-1 px-1">
             <span className="text-xs text-[var(--color-muted)]">{new Date(item.createdAt).toLocaleDateString('ar-SA')}</span>
-            <div className="relative">
-              <button onClick={() => setReactionPickerTarget(reactionPickerTarget?.id === item.id && reactionPickerTarget?.type === 'comment' ? null : { type: 'comment', id: item.id })} className={`flex items-center gap-1 text-xs transition-colors ${item.likes?.length > 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
+            <div className="flex items-center gap-0.5 relative"
+              onMouseEnter={() => {
+                if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                hoverTimeoutRef.current = setTimeout(() => setHoverReactionTarget({ type: 'comment', id: item.id }), 300);
+              }}
+              onMouseLeave={() => {
+                if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                hoverTimeoutRef.current = setTimeout(() => setHoverReactionTarget(null), 600);
+              }}
+            >
+              <button onClick={() => handleCommentReaction(item.id, item.likes?.[0]?.emoji || '❤️')} className={`flex items-center gap-1 text-xs transition-colors ${item.likes?.length > 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
                 <span className="text-sm leading-none">{item.likes?.[0]?.emoji || '♡'}</span>
                 {item._count.likes || 0}
               </button>
-              {reactionPickerTarget?.type === 'comment' && reactionPickerTarget?.id === item.id && (
+              {hoverReactionTarget?.type === 'comment' && hoverReactionTarget?.id === item.id && (
                 <EmojiPicker
-                  onSelect={(emoji) => { handleCommentReaction(item.id, emoji); setReactionPickerTarget(null); }}
-                  onClose={() => setReactionPickerTarget(null)}
+                  onSelect={(emoji) => { handleCommentReaction(item.id, emoji); setHoverReactionTarget(null); }}
+                  onClose={() => setHoverReactionTarget(null)}
                 />
               )}
             </div>
@@ -365,6 +375,8 @@ export default function PostDetail() {
                     <div key={i} className="relative group">
                       {isVideoUrl(url) ? (
                         <video src={photoUrl(url)} className="w-20 h-20 object-cover rounded-lg border border-[var(--color-border)]" />
+                      ) : isAudioUrl(url) ? (
+                        <div className="w-20 h-20 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg border border-[var(--color-border)] text-lg">🎵</div>
                       ) : (
                         <img src={photoUrl(url)} alt="" className="w-20 h-20 object-cover rounded-lg border border-[var(--color-border)]" />
                       )}
@@ -424,6 +436,8 @@ export default function PostDetail() {
                   {post.mediaUrls.map((url: string, i: number) => (
                     isVideoUrl(url) ? (
                       <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-[80vh] object-contain bg-gray-100 dark:bg-gray-800" />
+                    ) : isAudioUrl(url) ? (
+                      <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                     ) : (
                       <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full max-h-[80vh] object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={() => setViewerImg(photoUrl(url))} />
                     )
@@ -448,6 +462,8 @@ export default function PostDetail() {
                         {post.sharedPost.mediaUrls.map((url: string, i: number) => (
                           isVideoUrl(url) ? (
                           <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800" />
+                        ) : isAudioUrl(url) ? (
+                          <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                         ) : (
                           <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={() => setViewerImg(photoUrl(url))} />
                           )
@@ -461,15 +477,28 @@ export default function PostDetail() {
           )}
 
         <div className="flex items-center gap-6 pt-4 border-t border-[var(--color-border)]">
-          <div className="relative">
-            <button onClick={() => setReactionPickerTarget(reactionPickerTarget?.type === 'post' ? null : { type: 'post', id: post.id })} className={`flex items-center gap-1.5 text-sm transition-colors ${post.likes?.[0] ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
-              <span className="text-base leading-none">{post.likes?.[0]?.emoji || '♡'}</span>
-              {post._count.likes} {t('social.like')}
-            </button>
-            {reactionPickerTarget?.type === 'post' && (
+          <div className="flex items-center gap-1 relative"
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = setTimeout(() => setHoverReactionTarget({ type: 'post', id: post.id }), 300);
+            }}
+            onMouseLeave={() => {
+              if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = setTimeout(() => setHoverReactionTarget(null), 600);
+            }}
+          >
+            {post.reactions?.map((r: any) => (
+              <button key={r.emoji} onClick={() => handlePostReaction(r.emoji)}
+                className={`text-sm px-1.5 py-0.5 rounded-lg transition-colors ${r.reacted ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+              >
+                {r.emoji}<span className="text-xs mr-0.5">{r.count}</span>
+              </button>
+            ))}
+            <button onClick={() => { if (hoverReactionTarget?.type !== 'post') { setHoverReactionTarget({ type: 'post', id: post.id }); } else { setHoverReactionTarget(null); } }} className="text-sm px-1.5 py-0.5 rounded-lg text-[var(--color-muted)] hover:bg-gray-100 dark:hover:bg-gray-700">+</button>
+            {hoverReactionTarget?.type === 'post' && (
               <EmojiPicker
-                onSelect={(emoji) => { handlePostReaction(emoji); setReactionPickerTarget(null); }}
-                onClose={() => setReactionPickerTarget(null)}
+                onSelect={(emoji) => { handlePostReaction(emoji); setHoverReactionTarget(null); }}
+                onClose={() => setHoverReactionTarget(null)}
               />
             )}
           </div>

@@ -40,9 +40,10 @@ export const uploadMedia = multer({
     const allowed = [
       'image/jpeg', 'image/png', 'image/gif', 'image/webp',
       'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm',
     ];
     if (allowed.includes(file.mimetype)) return cb(null, true);
-    cb(new Error('Only images and videos are allowed'));
+    cb(new Error('Only images, videos, and audio files are allowed'));
   },
 });
 

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { photoUrl, isVideoUrl } from '../lib/api';
+import { photoUrl, isVideoUrl, isAudioUrl } from '../lib/api';
 import { renderRichText } from '../lib/richText';
 import UserAvatar from './UserAvatar';
 import ImageViewer from './ImageViewer';
@@ -33,7 +33,8 @@ const userName = (p: any) =>
 
 export default function PostCard({ post, currentUserId, onLike, onSave, onShare, onDelete, onPin, onReport, onCopyLink }: PostCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [hoverReaction, setHoverReaction] = useState(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sharing, setSharing] = useState(false);
   const [shareContent, setShareContent] = useState('');
   const [sharingSubmitting, setSharingSubmitting] = useState(false);
@@ -127,6 +128,8 @@ export default function PostCard({ post, currentUserId, onLike, onSave, onShare,
               {post.mediaUrls.map((url: string, i: number) =>
                 isVideoUrl(url) ? (
                   <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-[70vh] object-contain bg-gray-100 dark:bg-gray-800" />
+                ) : isAudioUrl(url) ? (
+                  <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                 ) : (
                   <img
                     key={i}
@@ -163,6 +166,8 @@ export default function PostCard({ post, currentUserId, onLike, onSave, onShare,
                     {post.sharedPost.mediaUrls.map((url: string, i: number) =>
                       isVideoUrl(url) ? (
                         <video key={i} src={photoUrl(url)} controls className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800" />
+                      ) : isAudioUrl(url) ? (
+                        <audio key={i} src={photoUrl(url)} controls className="w-full mt-1" />
                       ) : (
                         <img key={i} src={photoUrl(url)} alt="" loading="lazy" decoding="async" className="rounded-lg w-full max-h-48 object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer" onClick={(e) => { e.preventDefault(); setViewerImg(photoUrl(url)); }} />
                       )
@@ -176,18 +181,28 @@ export default function PostCard({ post, currentUserId, onLike, onSave, onShare,
 
         {/* Actions */}
         <div className="flex items-center gap-6 pt-3 border-t border-[var(--color-border)]">
-          <div className="relative">
-            <button
-              onClick={() => setReactionPickerOpen(!reactionPickerOpen)}
-              className={`flex items-center gap-1.5 text-sm transition-colors ${post.likes?.[0] ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}
-            >
-              <span className="text-base leading-none">{post.likes?.[0]?.emoji || '♡'}</span>
-              {post._count?.likes ?? 0}
-            </button>
-            {reactionPickerOpen && (
+          <div className="flex items-center gap-1 relative"
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = setTimeout(() => setHoverReaction(true), 300);
+            }}
+            onMouseLeave={() => {
+              if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = setTimeout(() => setHoverReaction(false), 600);
+            }}
+          >
+            {post.reactions?.map((r: any) => (
+              <button key={r.emoji} onClick={() => onLike(post.id, r.emoji)}
+                className={`text-sm px-1.5 py-0.5 rounded-lg transition-colors ${r.reacted ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+              >
+                {r.emoji}<span className="text-xs mr-0.5">{r.count}</span>
+              </button>
+            ))}
+            <button onClick={() => { if (!hoverReaction) { setHoverReaction(true); } else { setHoverReaction(false); } }} className="text-sm px-1.5 py-0.5 rounded-lg text-[var(--color-muted)] hover:bg-gray-100 dark:hover:bg-gray-700">+</button>
+            {hoverReaction && (
               <EmojiPicker
-                onSelect={(emoji) => { onLike(post.id, emoji); setReactionPickerOpen(false); }}
-                onClose={() => setReactionPickerOpen(false)}
+                onSelect={(emoji) => { onLike(post.id, emoji); setHoverReaction(false); }}
+                onClose={() => setHoverReaction(false)}
               />
             )}
           </div>
