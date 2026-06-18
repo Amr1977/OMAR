@@ -109,29 +109,40 @@ cd backend && npm run build
 cd frontend && npm run build
 ```
 
+## ⚠️ HOW TO DETECT IF ALREADY ON PRODUCTION SERVER
+If I (`opencode`) try to SSH and get `Permission denied (publickey)`, or if `hostname` returns something ending in `.compute.internal`, I'm **already on the EC2 server** and should run deploy commands directly instead of via SSH.
+
+Detection:
+```bash
+hostname                    # → ip-172-31-46-247.eu-north-1.compute.internal (prod)
+```
+When on server, PM2 and the project at `/home/ec2-user/hafsa` are available locally. Just run the deploy steps directly with `cd` — no SSH needed.
+
 ## ⚠️ USER GETS ANGRY WHEN I FORGET THIS — FULL DEPLOY FLOW
 ```
 git add . && git commit -m "msg" && git push
-ssh ec2-user@commerce-api.et3am.com
-  cd /home/ec2-user/hafsa && git pull
-  cd backend && npm run build && pm2 restart hafsa-backend
-  cd ../frontend && npm run build && firebase deploy --only hosting
+# Then on the server (or via SSH):
+cd /home/ec2-user/hafsa && git pull
+cd backend && npm run build && pm2 restart hafsa-backend
+cd ../frontend && npm run build && firebase deploy --only hosting
 ```
 
-### Step by step (what to actually run):
+### Step by step:
 1. **Commit & push** from local:
    ```
    git add . && git commit -m "message" && git push
    ```
-2. **SSH & deploy** (single SSH command):
+2. **Deploy** — run directly if on server, or via SSH:
+   ```bash
+   # Backend
+   cd /home/ec2-user/hafsa && git pull && cd backend && npm run build && pm2 restart hafsa-backend
+   # Frontend
+   cd /home/ec2-user/hafsa/frontend && npm run build && firebase deploy --only hosting
    ```
-   ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa && git pull && cd backend && npm run build && pm2 restart hafsa-backend && cd ../frontend && npm run build && firebase deploy --only hosting"
-   ```
-   Or separately:
-   - **Backend**: `ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa && git pull && cd backend && npm run build && pm2 restart hafsa-backend"`
-   - **Frontend**: `ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa/frontend && git pull && npm run build && firebase deploy --only hosting"`
 3. **Schema** (only when prisma schema changes):
-   `ssh ec2-user@commerce-api.et3am.com "cd /home/ec2-user/hafsa/backend && npx prisma db push && npx prisma generate"`
+   ```bash
+   cd /home/ec2-user/hafsa/backend && npx prisma db push && npx prisma generate
+   ```
 
 ## Branch
 `main` (current working branch)
