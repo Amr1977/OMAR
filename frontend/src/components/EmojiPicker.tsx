@@ -10,26 +10,23 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
   return (
-    <div ref={ref} className="absolute z-50" style={{ bottom: '100%', left: 0, marginBottom: 8 }} dir="ltr">
-      <div className="rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30" />
+      <div ref={ref} className="relative rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-2xl" dir="ltr" onClick={e => e.stopPropagation()}>
         <Picker
           onEmojiClick={({ emoji }) => {
             onSelect(emoji);
             onClose();
           }}
           searchPlaceholder="بحث..."
-          width={300}
-          height={360}
+          width={320}
+          height={400}
         />
       </div>
     </div>

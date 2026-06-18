@@ -501,8 +501,9 @@ export const toggleLike = async (req: AuthRequest, res: Response) => {
     } else {
       await prisma.postLike.create({ data: { postId, userId: req.userId!, emoji } });
       if (post.userId !== req.userId) {
-        const name = await getUserDisplayName(req.userId!);
-        notifyPostLike(post.userId, `${emoji} ${name}`, postId);
+        getUserDisplayName(req.userId!).then(name => {
+          notifyPostLike(post.userId, `${emoji} ${name}`, postId);
+        });
       }
       return res.json({ liked: true, emoji });
     }
@@ -794,15 +795,16 @@ export const toggleCommentLike = async (req: AuthRequest, res: Response) => {
     } else {
       await prisma.postCommentLike.create({ data: { commentId, userId: req.userId!, emoji } });
       if (comment.userId !== req.userId) {
-        const name = await getUserDisplayName(req.userId!);
-        createNotification({
-          userId: comment.userId,
-          type: 'comment_like',
-          titleAr: 'إعجاب بتعليقك',
-          titleEn: 'Comment Liked',
-          bodyAr: `أعجب ${emoji} ${name} بتعليقك`,
-          bodyEn: `${emoji} ${name} liked your comment`,
-          data: { postId: comment.postId, commentId },
+        getUserDisplayName(req.userId!).then(name => {
+          createNotification({
+            userId: comment.userId,
+            type: 'comment_like',
+            titleAr: 'إعجاب بتعليقك',
+            titleEn: 'Comment Liked',
+            bodyAr: `أعجب ${emoji} ${name} بتعليقك`,
+            bodyEn: `${emoji} ${name} liked your comment`,
+            data: { postId: comment.postId, commentId },
+          });
         });
       }
       return res.json({ liked: true, emoji });
