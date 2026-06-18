@@ -4,11 +4,12 @@ import { photoUrl, isVideoUrl } from '../lib/api';
 import { renderRichText } from '../lib/richText';
 import UserAvatar from './UserAvatar';
 import ImageViewer from './ImageViewer';
+import EmojiPicker from './EmojiPicker';
 
 interface PostCardProps {
   post: any;
   currentUserId?: string;
-  onLike: (postId: string) => void;
+  onLike: (postId: string, emoji: string) => void;
   onSave: (postId: string) => void;
   onShare: (postId: string, content?: string) => Promise<void>;
   onDelete: (postId: string) => void;
@@ -32,6 +33,7 @@ const userName = (p: any) =>
 
 export default function PostCard({ post, currentUserId, onLike, onSave, onShare, onDelete, onPin, onReport, onCopyLink }: PostCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareContent, setShareContent] = useState('');
   const [sharingSubmitting, setSharingSubmitting] = useState(false);
@@ -174,15 +176,21 @@ export default function PostCard({ post, currentUserId, onLike, onSave, onShare,
 
         {/* Actions */}
         <div className="flex items-center gap-6 pt-3 border-t border-[var(--color-border)]">
-          <button
-            onClick={() => onLike(post.id)}
-            className={`flex items-center gap-1.5 text-sm transition-colors ${post.likes?.[0] ? 'text-red-500' : 'text-[var(--color-muted)] hover:text-red-500'}`}
-          >
-            <svg className="w-5 h-5" fill={post.likes?.[0] ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            {post._count?.likes ?? 0}
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setReactionPickerOpen(!reactionPickerOpen)}
+              className={`flex items-center gap-1.5 text-sm transition-colors ${post.likes?.[0] ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}
+            >
+              <span className="text-base leading-none">{post.likes?.[0]?.emoji || '♡'}</span>
+              {post._count?.likes ?? 0}
+            </button>
+            {reactionPickerOpen && (
+              <EmojiPicker
+                onSelect={(emoji) => { onLike(post.id, emoji); setReactionPickerOpen(false); }}
+                onClose={() => setReactionPickerOpen(false)}
+              />
+            )}
+          </div>
           <Link
             to={`/social/post/${post.id}`}
             className="flex items-center gap-1.5 text-sm text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors"

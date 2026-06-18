@@ -69,16 +69,19 @@ export default function UserPublicProfile() {
     } catch {}
   };
 
-  const handleLike = async (postId: string) => {
+  const handleLike = async (postId: string, emoji: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
-    const isLiked = !!(post.likes?.[0]);
-    await api.social.toggleLike(postId);
+    const hadReaction = !!(post.likes?.[0]);
+    const res: any = await api.social.toggleLike(postId, emoji);
     setPosts(prev => prev.map(p =>
       p.id === postId ? {
         ...p,
-        likes: isLiked ? [] : [{ userId: me?.id }],
-        _count: { ...p._count, likes: isLiked ? p._count.likes - 1 : p._count.likes + 1 },
+        likes: res.liked ? [{ userId: me?.id, emoji: res.emoji }] : [],
+        _count: {
+          ...p._count,
+          likes: hadReaction === res.liked ? p._count.likes : (res.liked ? p._count.likes + 1 : p._count.likes - 1),
+        },
       } : p
     ));
   };

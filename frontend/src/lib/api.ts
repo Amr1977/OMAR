@@ -175,7 +175,7 @@ export const api = {
     getExplore: (params?: string) => api.get(`/social/explore${params ? `?${params}` : ''}`),
     getPost: (id: string) => api.get(`/social/posts/${id}`),
     deletePost: (id: string) => api.delete(`/social/posts/${id}`),
-    toggleLike: (id: string) => api.post(`/social/posts/${id}/like`),
+    toggleLike: (id: string, emoji?: string) => api.post(`/social/posts/${id}/like`, { emoji }),
     addComment: (id: string, content: string) => api.post(`/social/posts/${id}/comments`, { content }),
     deleteComment: (postId: string, commentId: string) => api.delete(`/social/posts/${postId}/comments/${commentId}`),
     toggleFollow: (userId: string) => api.post(`/social/follow/${userId}`),
@@ -190,8 +190,8 @@ export const api = {
       api.post(`/social/posts/${postId}/comments/${commentId}/replies`, { content }),
     getReplies: (postId: string, commentId: string, page?: number) =>
       api.get(`/social/posts/${postId}/comments/${commentId}/replies?page=${page || 1}`),
-    toggleCommentLike: (commentId: string) =>
-      api.post(`/social/comments/${commentId}/like`),
+    toggleCommentLike: (commentId: string, emoji?: string) =>
+      api.post(`/social/comments/${commentId}/like`, { emoji }),
     toggleSave: (postId: string) => api.post(`/social/posts/${postId}/save`),
     getSaved: (page?: number) => api.get(`/social/saved?page=${page || 1}`),
     reportPost: (postId: string, reason: string, details?: string) =>

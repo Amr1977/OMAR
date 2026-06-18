@@ -6,6 +6,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { renderRichText } from '../../lib/richText';
 import ImageViewer from '../../components/ImageViewer';
 import UserAvatar from '../../components/UserAvatar';
+import EmojiPicker from '../../components/EmojiPicker';
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +32,7 @@ export default function PostDetail() {
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const scrolledToComment = useRef(false);
+  const [reactionPickerTarget, setReactionPickerTarget] = useState<{ type: 'post' | 'comment'; id: string } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -55,13 +57,17 @@ export default function PostDetail() {
     }
   }, [commentId, post?.comments]);
 
-  const handleLike = async () => {
+  const handlePostReaction = async (emoji: string) => {
     if (!post) return;
-    await api.social.toggleLike(post.id);
+    const hadReaction = !!(post.likes?.[0]);
+    const res: any = await api.social.toggleLike(post.id, emoji);
     setPost({
       ...post,
-      liked: !post.liked,
-      _count: { ...post._count, likes: post.liked ? post._count.likes - 1 : post._count.likes + 1 },
+      likes: res.liked ? [{ userId: user?.id, emoji: res.emoji }] : [],
+      _count: {
+        ...post._count,
+        likes: hadReaction === res.liked ? post._count.likes : (res.liked ? post._count.likes + 1 : post._count.likes - 1),
+      },
     });
   };
 
@@ -88,25 +94,35 @@ export default function PostDetail() {
       return item;
     });
 
-  const handleCommentLike = async (commentId: string) => {
+  const handleCommentReaction = async (commentId: string, emoji: string) => {
     if (!post) return;
-    const snapshot = post;
+    const findComment = (items: any[]): any | null => {
+      for (const item of items) {
+        if (item.id === commentId) return item;
+        if (item.replies?.length) {
+          const found = findComment(item.replies);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    const comment = findComment(post.comments);
+    const hadReaction = !!(comment?.likes?.length);
+    const res: any = await api.social.toggleCommentLike(commentId, emoji);
     setPost((prev: any) => {
       if (!prev) return prev;
       return {
         ...prev,
-        comments: findAndUpdateComment(prev.comments, commentId, (c) => {
-          const liked = c.likes?.length > 0;
-          return {
-            ...c,
-            likes: liked ? [] : [{ userId: user?.id }],
-            _count: { ...c._count, likes: liked ? c._count.likes - 1 : c._count.likes + 1 },
-          };
-        }),
+        comments: findAndUpdateComment(prev.comments, commentId, (c) => ({
+          ...c,
+          likes: res.liked ? [{ userId: user?.id, emoji: res.emoji }] : [],
+          _count: {
+            ...c._count,
+            likes: hadReaction === res.liked ? c._count.likes : (res.liked ? c._count.likes + 1 : c._count.likes - 1),
+          },
+        })),
       };
     });
-    try { await api.social.toggleCommentLike(commentId); }
-    catch { setPost(snapshot); }
   };
 
   const handleReplySubmit = async (targetId: string) => {
@@ -166,12 +182,18 @@ export default function PostDetail() {
           </div>
           <div className="flex items-center gap-3 mt-1 px-1">
             <span className="text-xs text-[var(--color-muted)]">{new Date(item.createdAt).toLocaleDateString('ar-SA')}</span>
-            <button onClick={() => handleCommentLike(item.id)} className={`flex items-center gap-1 text-xs transition-colors ${item.likes?.length > 0 ? 'text-red-500' : 'text-[var(--color-muted)] hover:text-red-500'}`}>
-              <svg className="w-3.5 h-3.5" fill={item.likes?.length > 0 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              {item._count.likes || 0}
-            </button>
+            <div className="relative">
+              <button onClick={() => setReactionPickerTarget(reactionPickerTarget?.id === item.id && reactionPickerTarget?.type === 'comment' ? null : { type: 'comment', id: item.id })} className={`flex items-center gap-1 text-xs transition-colors ${item.likes?.length > 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
+                <span className="text-sm leading-none">{item.likes?.[0]?.emoji || '♡'}</span>
+                {item._count.likes || 0}
+              </button>
+              {reactionPickerTarget?.type === 'comment' && reactionPickerTarget?.id === item.id && (
+                <EmojiPicker
+                  onSelect={(emoji) => { handleCommentReaction(item.id, emoji); setReactionPickerTarget(null); }}
+                  onClose={() => setReactionPickerTarget(null)}
+                />
+              )}
+            </div>
             <button onClick={() => setReplyTargetId(replyTargetId === item.id ? null : item.id)} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors">
               {t('social.reply')}
             </button>
@@ -439,12 +461,18 @@ export default function PostDetail() {
           )}
 
         <div className="flex items-center gap-6 pt-4 border-t border-[var(--color-border)]">
-          <button onClick={handleLike} className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked?.[0] || post.liked ? 'text-red-500' : 'text-[var(--color-muted)] hover:text-red-500'}`}>
-            <svg className="w-5 h-5" fill={post.liked?.[0] || post.liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            {post._count.likes} {t('social.like')}
-          </button>
+          <div className="relative">
+            <button onClick={() => setReactionPickerTarget(reactionPickerTarget?.type === 'post' ? null : { type: 'post', id: post.id })} className={`flex items-center gap-1.5 text-sm transition-colors ${post.likes?.[0] ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'}`}>
+              <span className="text-base leading-none">{post.likes?.[0]?.emoji || '♡'}</span>
+              {post._count.likes} {t('social.like')}
+            </button>
+            {reactionPickerTarget?.type === 'post' && (
+              <EmojiPicker
+                onSelect={(emoji) => { handlePostReaction(emoji); setReactionPickerTarget(null); }}
+                onClose={() => setReactionPickerTarget(null)}
+              />
+            )}
+          </div>
           <span className="flex items-center gap-1.5 text-sm text-[var(--color-muted)]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

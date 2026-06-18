@@ -447,17 +447,23 @@ export const toggleLike = async (req: AuthRequest, res: Response) => {
     if (!post || !(await canView(post, req.userId!))) {
       return res.status(403).json({ error: 'FORBIDDEN', message: 'Cannot like this post' });
     }
+    const emoji = req.body?.emoji || '❤️';
     const existing = await prisma.postLike.findUnique({ where: { postId_userId: { postId, userId: req.userId! } } });
     if (existing) {
-      await prisma.postLike.delete({ where: { id: existing.id } });
-      res.json({ liked: false });
+      if (existing.emoji === emoji) {
+        await prisma.postLike.delete({ where: { id: existing.id } });
+        return res.json({ liked: false });
+      } else {
+        await prisma.postLike.update({ where: { id: existing.id }, data: { emoji } });
+        return res.json({ liked: true, emoji });
+      }
     } else {
-      await prisma.postLike.create({ data: { postId, userId: req.userId! } });
+      await prisma.postLike.create({ data: { postId, userId: req.userId!, emoji } });
       if (post.userId !== req.userId) {
         const name = await getUserDisplayName(req.userId!);
-        notifyPostLike(post.userId, name, postId);
+        notifyPostLike(post.userId, `${emoji} ${name}`, postId);
       }
-      res.json({ liked: true });
+      return res.json({ liked: true, emoji });
     }
   } catch (error) {
     console.error('Toggle like error:', error);
@@ -731,14 +737,20 @@ export const toggleCommentLike = async (req: AuthRequest, res: Response) => {
     const commentId = req.params.commentId as string;
     const comment = await prisma.postComment.findUnique({ where: { id: commentId } });
     if (!comment) return res.status(404).json({ error: 'NOT_FOUND' });
+    const emoji = req.body?.emoji || '❤️';
     const existing = await prisma.postCommentLike.findUnique({
       where: { commentId_userId: { commentId, userId: req.userId! } },
     });
     if (existing) {
-      await prisma.postCommentLike.delete({ where: { id: existing.id } });
-      return res.json({ liked: false });
+      if (existing.emoji === emoji) {
+        await prisma.postCommentLike.delete({ where: { id: existing.id } });
+        return res.json({ liked: false });
+      } else {
+        await prisma.postCommentLike.update({ where: { id: existing.id }, data: { emoji } });
+        return res.json({ liked: true, emoji });
+      }
     } else {
-      await prisma.postCommentLike.create({ data: { commentId, userId: req.userId! } });
+      await prisma.postCommentLike.create({ data: { commentId, userId: req.userId!, emoji } });
       if (comment.userId !== req.userId) {
         const name = await getUserDisplayName(req.userId!);
         createNotification({
@@ -746,12 +758,12 @@ export const toggleCommentLike = async (req: AuthRequest, res: Response) => {
           type: 'comment_like',
           titleAr: 'إعجاب بتعليقك',
           titleEn: 'Comment Liked',
-          bodyAr: `أعجب ${name} بتعليقك`,
-          bodyEn: `${name} liked your comment`,
+          bodyAr: `أعجب ${emoji} ${name} بتعليقك`,
+          bodyEn: `${emoji} ${name} liked your comment`,
           data: { postId: comment.postId, commentId },
         });
       }
-      return res.json({ liked: true });
+      return res.json({ liked: true, emoji });
     }
   } catch (error) {
     console.error('Toggle comment like error:', error);
