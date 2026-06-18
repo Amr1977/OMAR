@@ -23,6 +23,7 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
       <div className="absolute inset-0 bg-black/30" />
       <div ref={ref} className="relative rounded-2xl border border-[var(--color-border)] shadow-2xl" dir="ltr" onClick={e => e.stopPropagation()}>
         <Picker
+          autoFocusSearch={false}
           onEmojiClick={({ emoji }) => {
             onSelect(emoji);
             onClose();

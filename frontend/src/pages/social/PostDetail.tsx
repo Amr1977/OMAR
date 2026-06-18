@@ -60,16 +60,21 @@ export default function PostDetail() {
 
   const handlePostReaction = async (emoji: string) => {
     if (!post) return;
-    const hadReaction = !!(post.likes?.[0]);
-    const res: any = await api.social.toggleLike(post.id, emoji);
+    const prev = { likes: post.likes, count: post._count.likes };
+    const prevEmoji = prev.likes?.[0]?.emoji;
+    // optimistic update immediately
     setPost({
       ...post,
-      likes: res.liked ? [{ userId: user?.id, emoji: res.emoji }] : [],
-      _count: {
-        ...post._count,
-        likes: hadReaction === res.liked ? post._count.likes : (res.liked ? post._count.likes + 1 : post._count.likes - 1),
-      },
+      likes: prevEmoji === emoji ? [] : [{ userId: user?.id, emoji }],
+      _count: { ...post._count, likes: prev.count + (prevEmoji === emoji ? -1 : prev.likes?.length ? 0 : 1) },
     });
+    const res: any = await api.social.toggleLike(post.id, emoji);
+    // reconcile from snapshot + server truth
+    setPost((p: any) => p ? {
+      ...p,
+      likes: res.liked ? [{ userId: user?.id, emoji: res.emoji }] : [],
+      _count: { ...p._count, likes: prev.count + (res.liked ? (prev.likes?.length ? 0 : 1) : (prev.likes?.length ? -1 : 0)) },
+    } : p);
   };
 
   const handleComment = async () => {
@@ -108,8 +113,24 @@ export default function PostDetail() {
       return null;
     };
     const comment = findComment(post.comments);
-    const hadReaction = !!(comment?.likes?.length);
+    if (!comment) return;
+    const prevLikes = comment.likes;
+    const prevCount = comment._count.likes;
+    const prevEmoji = prevLikes?.[0]?.emoji;
+    // optimistic update immediately
+    setPost((prev: any) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        comments: findAndUpdateComment(prev.comments, commentId, (c) => ({
+          ...c,
+          likes: prevEmoji === emoji ? [] : [{ userId: user?.id, emoji }],
+          _count: { ...c._count, likes: prevCount + (prevEmoji === emoji ? -1 : prevLikes?.length ? 0 : 1) },
+        })),
+      };
+    });
     const res: any = await api.social.toggleCommentLike(commentId, emoji);
+    // reconcile from snapshot + server truth
     setPost((prev: any) => {
       if (!prev) return prev;
       return {
@@ -117,10 +138,7 @@ export default function PostDetail() {
         comments: findAndUpdateComment(prev.comments, commentId, (c) => ({
           ...c,
           likes: res.liked ? [{ userId: user?.id, emoji: res.emoji }] : [],
-          _count: {
-            ...c._count,
-            likes: hadReaction === res.liked ? c._count.likes : (res.liked ? c._count.likes + 1 : c._count.likes - 1),
-          },
+          _count: { ...c._count, likes: prevCount + (res.liked ? (prevLikes?.length ? 0 : 1) : (prevLikes?.length ? -1 : 0)) },
         })),
       };
     });

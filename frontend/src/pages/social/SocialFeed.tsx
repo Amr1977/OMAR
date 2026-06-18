@@ -193,8 +193,8 @@ export default function SocialFeed() {
   const handleReaction = async (postId: string, emoji: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
-    const hadReaction = !!(post.likes?.[0]);
-    const res: any = await api.social.toggleLike(postId, emoji);
+    const prev = post.likes?.[0];
+    // optimistic update immediately
     queryClient.setQueriesData({ queryKey: ['social-feed'] }, (old: any) => {
       if (!old) return old;
       return {
@@ -204,16 +204,15 @@ export default function SocialFeed() {
           posts: page.posts.map((p: any) =>
             p.id === postId ? {
               ...p,
-              likes: res.liked ? [{ userId: currentUserId, emoji: res.emoji }] : [],
-              _count: {
-                ...p._count,
-                likes: hadReaction === res.liked ? p._count.likes : (res.liked ? p._count.likes + 1 : p._count.likes - 1),
-              },
+              likes: prev?.emoji === emoji ? [] : [{ userId: currentUserId, emoji }],
+              _count: { ...p._count, likes: p._count.likes + (prev?.emoji === emoji ? -1 : prev ? 0 : 1) },
             } : p
           ),
         })),
       };
     });
+    await api.social.toggleLike(postId, emoji);
+    queryClient.invalidateQueries({ queryKey: ['social-feed'] });
   };
 
   const handleDelete = async (postId: string) => {
