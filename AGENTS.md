@@ -96,11 +96,12 @@ On EC2 at `/home/ec2-user/hafsa/backend/logs/`:
 Both `backend/package.json` and `frontend/package.json` share the same version. **Bump the patch version with every commit** (e.g. `1.1.38` → `1.1.39`). Consider setting up a pre-commit hook:
 ```bash
 # .git/hooks/pre-commit (or via husky)
-# Bump patch version in both packages
+# Bump patch version in both packages + version.ts
 V=$(node -p "const p=require('./backend/package.json'); p.version.replace(/\d+$/, m=>+m+1)")
 npm --prefix backend version $V --no-git-tag-version
 npm --prefix frontend version $V --no-git-tag-version
-git add backend/package.json frontend/package.json
+echo "export const APP_VERSION = '$V';" > frontend/src/lib/version.ts
+git add backend/package.json frontend/package.json frontend/src/lib/version.ts
 ```
 
 ## Build Commands (both must pass)
