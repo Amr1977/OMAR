@@ -58,7 +58,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
       setToken(token);
-      const user = await api.auth.getMe();
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Invalid token');
+      const user = await res.json();
       set({ user, isAuthenticated: true, isLoading: false });
       connectSocket();
     } catch {

@@ -284,12 +284,6 @@ export default function Landing() {
                 <p className="text-[10px] text-amber-400/70 mt-0.5">⚠ يجب استخدام شبكة TRC20</p>
               </div>
             </div>
-            <div className="text-center">
-              <Link to="/donate" className="inline-flex items-center gap-2 px-8 py-3 bg-[#DAA520] text-[#1B4332] rounded-xl font-bold hover:bg-[#F5E6B8] hover:shadow-lg hover:scale-105 transition-all duration-200 shadow-md">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                تبرع الآن
-              </Link>
-            </div>
           </div>
         </section>
 
@@ -533,13 +527,6 @@ export default function Landing() {
               </div>
               <p className="text-[10px] text-amber-400/70 mt-0.5">⚠ يجب استخدام شبكة TRC20</p>
             </div>
-          </div>
-          <div className="text-center">
-            <Link to="/donate"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-[#DAA520] text-[#1B4332] rounded-xl font-bold hover:bg-[#F5E6B8] hover:shadow-lg hover:scale-105 transition-all duration-200 shadow-md">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-              تبرع الآن
-            </Link>
           </div>
         </div>
       </section>
