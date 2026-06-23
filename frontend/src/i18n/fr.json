@@ -14,7 +14,8 @@
     "admin": "Tableau de bord",
     "login": "Connexion",
     "register": "S'inscrire",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "downloads": "Téléchargements"
   },
   "auth": {
     "phone": "Numéro de téléphone",
@@ -356,5 +357,15 @@
     "hourly": "Par heure",
     "daily": "Par jour",
     "negotiable": "Négociable"
+  },
+  "downloads": {
+    "badge": "Disponible",
+    "heading": "Télécharger OMAR",
+    "subtitle": "Choisissez votre plateforme. Open source. Sans traqueurs.",
+    "androidDesc": "APK pour Android 7.0+",
+    "windowsDesc": "Installateur EXE pour Windows 10+",
+    "macDesc": "DMG pour macOS 11+ (Intel & Apple Silicon)",
+    "linuxDesc": "AppImage pour Linux x86_64",
+    "viewReleases": "Voir toutes les versions sur GitHub"
   }
 }

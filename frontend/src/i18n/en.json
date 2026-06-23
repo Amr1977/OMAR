@@ -14,7 +14,8 @@
     "admin": "Dashboard",
     "login": "Login",
     "register": "Register",
-    "logout": "Logout"
+    "logout": "Logout",
+    "downloads": "Downloads"
   },
   "auth": {
     "phone": "Phone Number",
@@ -381,5 +382,15 @@
     "hourly": "Per Hour",
     "daily": "Per Day",
     "negotiable": "Negotiable"
+  },
+  "downloads": {
+    "badge": "Available Now",
+    "heading": "Get OMAR",
+    "subtitle": "Choose your platform. Open source. No trackers.",
+    "androidDesc": "APK for Android 7.0+",
+    "windowsDesc": "EXE installer for Windows 10+",
+    "macDesc": "DMG for macOS 11+ (Intel & Apple Silicon)",
+    "linuxDesc": "AppImage for x86_64 Linux",
+    "viewReleases": "View all releases on GitHub"
   }
 }

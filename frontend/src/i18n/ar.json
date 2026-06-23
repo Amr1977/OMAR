@@ -14,7 +14,8 @@
     "admin": "لوحة التحكم",
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "downloads": "التحميل"
   },
   "auth": {
     "phone": "رقم الهاتف",
@@ -381,5 +382,15 @@
     "hourly": "بالساعة",
     "daily": "باليوم",
     "negotiable": "قابل للتفاوض"
+  },
+  "downloads": {
+    "badge": "متوفر الآن",
+    "heading": "حمّل تطبيق عمر",
+    "subtitle": "اختر منصتك. مفتوح المصدر. بدون متتبعات.",
+    "androidDesc": "APK لأندرويد 7.0+",
+    "windowsDesc": "مثبت لويندوز 10+",
+    "macDesc": "DMG لماك macOS 11+",
+    "linuxDesc": "AppImage للينكس x86_64",
+    "viewReleases": "عرض جميع الإصدارات على جيتهاب"
   }
 }

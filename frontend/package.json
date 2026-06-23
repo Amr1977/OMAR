@@ -1,7 +1,7 @@
 {
   "name": "omar-frontend",
   "private": true,
-  "version": "1.1.54",
+  "version": "1.1.53",
   "type": "module",
   "description": "Frontend for Hafsa — an Islamic marriage platform",
   "license": "MIT",
@@ -28,7 +28,12 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "generate:og": "node scripts/generate-og.cjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "electron:start": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "tsc -b && vite build && electron-builder --config electron-builder.json --publish never",
+    "electron:build:win": "tsc -b && vite build && electron-builder --config electron-builder.json --win --publish never",
+    "electron:build:mac": "tsc -b && vite build && electron-builder --config electron-builder.json --mac --publish never",
+    "electron:build:linux": "tsc -b && vite build && electron-builder --config electron-builder.json --linux --publish never"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
@@ -54,11 +59,16 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.3",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
     "playwright": "^1.60.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "tailwindcss-rtl": "^0.9.0",
     "typescript": "^5.6.3",
-    "vite": "^6.0.3"
-  }
+    "vite": "^6.0.3",
+    "wait-on": "^8.0.3"
+  },
+  "main": "../electron/main.js"
 }

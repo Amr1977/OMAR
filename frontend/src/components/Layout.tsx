@@ -43,6 +43,7 @@ export default function Layout() {
     { path: '/', label: t('nav.home') },
     { path: '/social', label: 'المنشورات' },
     { path: '/social/people', label: 'اكتشف أشخاصاً' },
+    { path: '/downloads', label: t('nav.downloads') },
     ...(isAuthenticated
       ? [
           { path: '/services', label: 'الخدمات' },
@@ -361,6 +362,8 @@ export default function Layout() {
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
               Amr Lotfy
             </a>
+            <span className="opacity-50">|</span>
+            <a href="https://github.com/Amr1977/OMAR/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary)] transition-colors">MIT License</a>
           </div>
           <span className="font-mono" dir="ltr">v{APP_VERSION}</span>
         </div>

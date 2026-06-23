@@ -1,0 +1,43 @@
+name: Build OMAR
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  electron:
+    name: Electron (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: cd frontend && npm install
+      - name: Build web project
+        run: npm run build
+        working-directory: frontend
+      - name: Build Electron (${{ matrix.os }})
+        run: npx electron-builder --config electron-builder.json --publish never
+        working-directory: frontend
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: omar-electron-${{ matrix.os }}
+          path: frontend/dist-electron/*
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest'
+        with:
+          tag_name: v1.1.${{ github.run_number }}
+          name: OMAR v1.1.${{ github.run_number }}
+          body: |
+            Automatic build from commit ${{ github.sha }}
+          files: |
+            frontend/dist-electron/*
+          make_latest: true
+          generate_release_notes: false

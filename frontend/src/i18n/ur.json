@@ -14,7 +14,8 @@
     "admin": "ڈیش بورڈ",
     "login": "لاگ ان",
     "register": "رجسٹر",
-    "logout": "لاگ آؤٹ"
+    "logout": "لاگ آؤٹ",
+    "downloads": "ڈاؤن لوڈ"
   },
   "auth": {
     "phone": "فون نمبر",
@@ -356,5 +357,15 @@
     "hourly": "فی گھنٹہ",
     "daily": "فی دن",
     "negotiable": "قابل گفت و شنید"
+  },
+  "downloads": {
+    "badge": "ابھی دستیاب",
+    "heading": "عمر ڈاؤن لوڈ کریں",
+    "subtitle": "اپنا پلیٹ فارم منتخب کریں۔ اوپن سورس۔ کوئی ٹریکر نہیں۔",
+    "androidDesc": "Android 7.0+ کے لیے APK",
+    "windowsDesc": "Windows 10+ کے لیے EXE انسٹالر",
+    "macDesc": "macOS 11+ (Intel اور Apple Silicon) کے لیے DMG",
+    "linuxDesc": "Linux x86_64 کے لیے AppImage",
+    "viewReleases": "GitHub پر تمام ریلیز دیکھیں"
   }
 }

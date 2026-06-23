@@ -28,6 +28,7 @@ import UserPublicProfile from './pages/social/UserPublicProfile';
 import HashtagFeed from './pages/social/HashtagFeed';
 import PeopleSearch from './pages/social/PeopleSearch';
 import HafsaStory from './pages/siyar/HafsaStory';
+import Downloads from './pages/Downloads';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminUserDetail from './pages/admin/AdminUserDetail';
@@ -98,6 +99,7 @@ export default function App() {
         <Route index element={<Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="downloads" element={<Downloads />} />
         <Route path="marriage/hafsa" element={<HafsaStory />} />
         <Route path="profile/setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
         <Route path="profile/my" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />

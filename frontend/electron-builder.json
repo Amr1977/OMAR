@@ -1,0 +1,26 @@
+{
+  "appId": "com.omar.app",
+  "productName": "OMAR",
+  "directories": {
+    "buildResources": "electron",
+    "output": "dist-electron"
+  },
+  "files": [
+    "../electron/**/*",
+    "dist/**/*"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "../electron/icon.png"
+  },
+  "mac": {
+    "target": "dmg",
+    "icon": "../electron/icon.png",
+    "category": "public.app-category.social-networking"
+  },
+  "linux": {
+    "target": "AppImage",
+    "icon": "../electron/icon.png",
+    "category": "Network"
+  }
+}
